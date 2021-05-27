@@ -9,7 +9,7 @@ import { Logger } from '@nestjs/common';
 import { Socket, Server } from 'socket.io';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { MessageDocument } from './schemas/message.schema';
+import { MessageDocument } from '../schemas/message.schema';
 import { MessageDto } from './dto/message.dto';
 
 @WebSocketGateway()
@@ -22,7 +22,6 @@ export class ChatGateway implements OnGatewayConnection {
   }
 
   @WebSocketServer() server: Server;
-  private logger: Logger = new Logger('AppGateway');
 
   @SubscribeMessage('msgToServer')
   handleMessage(client: Socket, payload): void {
@@ -46,7 +45,7 @@ export class ChatGateway implements OnGatewayConnection {
   async deleteAllMessages(@ConnectedSocket() client) {
     await this.messageCon.deleteMany({});
 
-    client.broadcast.emit('deleteAllMessages');
+    this.server.emit('deleteAllMessages');
   }
 
   @SubscribeMessage('example')

@@ -1,7 +1,7 @@
 const app = new Vue({
   el: '#app',
   data: {
-    title: 'chat on VUE.js',
+    title: 'chat',
     name: '',
     text: '',
     messages: [],
