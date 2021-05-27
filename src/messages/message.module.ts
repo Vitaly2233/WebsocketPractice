@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ChatGateway } from './chat.gateway';
-import { MessageSchema } from '../schemas/message.schema';
-import { RoomSchema } from '../schemas/rooms.schema';
+import { MessageSchema } from './schemas/message.schema';
+import { RoomSchema } from './schemas/rooms.schema';
 
 @Module({
   providers: [ChatGateway],
