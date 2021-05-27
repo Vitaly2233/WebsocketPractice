@@ -1,7 +1,7 @@
 const app = new Vue({
   el: '#app',
   data: {
-    title: 'Nestjs Websockets Chat',
+    title: 'chat on VUE.js',
     name: '',
     text: '',
     messages: [],
@@ -24,15 +24,13 @@ const app = new Vue({
     validateInput() {
       return this.name.length > 0 && this.text.length > 0;
     },
-    getAllMessages() {
-      this.socket.emit('getAllMessages');
-    },
+
     deleteAllMessages() {
       this.socket.emit('deleteAllMessages');
     },
   },
   created() {
-    this.socket = io('http://localhost:3001');
+    this.socket = io('http://localhost:8080');
 
     this.socket.on('sendMesssageToAll', (message) => {
       this.receivedMessage(message);

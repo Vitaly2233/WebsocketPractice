@@ -1,11 +1,8 @@
 import {
   SubscribeMessage,
   WebSocketGateway,
-  OnGatewayInit,
   WebSocketServer,
   OnGatewayConnection,
-  OnGatewayDisconnect,
-  MessageBody,
   ConnectedSocket,
 } from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
@@ -16,8 +13,13 @@ import { MessageDocument } from './schemas/message.schema';
 import { MessageDto } from './dto/message.dto';
 
 @WebSocketGateway()
-export class ChatGateway {
+export class ChatGateway implements OnGatewayConnection {
   constructor(@InjectModel('ms') private messageCon: Model<MessageDocument>) {}
+
+  async handleConnection(client: any, ...args: any[]) {
+    const messages: MessageDto[] = await this.messageCon.find({});
+    client.emit('getAllMessages', messages);
+  }
 
   @WebSocketServer() server: Server;
   private logger: Logger = new Logger('AppGateway');
@@ -37,8 +39,6 @@ export class ChatGateway {
   async getAllMessages(@ConnectedSocket() client) {
     const messages: MessageDto[] = await this.messageCon.find({});
 
-    client.broadcast.emit('test');
-
     client.emit('getAllMessages', messages);
   }
 
@@ -47,5 +47,10 @@ export class ChatGateway {
     await this.messageCon.deleteMany({});
 
     client.broadcast.emit('deleteAllMessages');
+  }
+
+  @SubscribeMessage('example')
+  example() {
+    console.log('here');
   }
 }
