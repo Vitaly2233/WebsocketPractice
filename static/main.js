@@ -1,5 +1,52 @@
-const app = new Vue({
-  el: '#app',
+const interface = new Vue({
+  el: '#interface',
+  data: {
+    status: '',
+    username: '',
+    password: '',
+  },
+  methods: {
+    async login() {
+      const data = {
+        username: this.username,
+        password: this.password,
+      };
+      const response = await fetch('http://localhost:8080/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      if (response.status == 404) {
+        this.status = 'invalid username or password';
+      }
+      const token = await response.json();
+      document.cookie = 'token=' + token.access_token;
+    },
+
+    async register() {
+      const data = {
+        username: this.username,
+        password: this.password,
+      };
+      const result = await fetch('http://localhost:8080/auth/registration', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      if (result.status == 400)
+        return (this.status =
+          'password must contain from 4 to 16 symbols, username too');
+      this.status = 'success';
+    },
+  },
+});
+
+const chat = new Vue({
+  el: '#chat',
   data: {
     title: 'chat',
     name: '',
@@ -28,24 +75,21 @@ const app = new Vue({
     deleteAllMessages() {
       this.socket.emit('deleteAllMessages');
     },
-  },
-  created() {
-    this.socket = io('http://localhost:8080');
 
-    this.socket.on('sendMesssageToAll', (message) => {
-      this.receivedMessage(message);
-    });
+    createSockets() {
+      this.socket = io('http://localhost:8080');
 
-    this.socket.on('getAllMessages', (data) => {
-      this.messages = data;
-    });
+      this.socket.on('sendMesssageToAll', (message) => {
+        this.receivedMessage(message);
+      });
 
-    this.socket.on('deleteAllMessages', () => {
-      this.messages = [];
-    });
+      this.socket.on('getAllMessages', (data) => {
+        this.messages = data;
+      });
 
-    this.socket.on('test', () => {
-      console.log('test is called');
-    });
+      this.socket.on('deleteAllMessages', () => {
+        this.messages = [];
+      });
+    },
   },
 });

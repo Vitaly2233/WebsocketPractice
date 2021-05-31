@@ -11,7 +11,14 @@
     <script type="text/javascript" src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
 </head>
 <body>
-    <div id="app" class="container">
+    <div id="interface">
+        <input type="text" placeholder="enter username" v-model="username">
+        <input type="text" placeholder="enter password" v-model="password">
+        <button @click.prevent="login">login</button>
+        <button @click.prevent="register">register</button>
+        <h3>{{status}}</h3>
+    </div>
+    <div id="chat" class="container" hidden>
             <div class="row">
                 <div class="col-md-6 offset-md-3 col-sm-12">
                     <h1 class="text-center">{{ title }}</h1>

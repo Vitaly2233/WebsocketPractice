@@ -6,10 +6,7 @@ export type RoomDocument = Room & Document;
 @Schema()
 export class Room {
   @Prop()
-  roomId: string;
-
-  @Prop({ type: [String] })
-  members: string[];
+  participants: string[];
 }
 
 export const RoomSchema = SchemaFactory.createForClass(Room);
