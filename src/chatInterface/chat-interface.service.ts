@@ -13,15 +13,25 @@ export class ChatInterfaceService {
     @InjectModel('room') private roomModel: Model<RoomDocument>,
   ) {}
 
-  async getChats(req: myReq): Promise<string[] | HttpException> {
+  async getChats(
+    req: myReq,
+  ): Promise<Record<string, string[]> | HttpException> {
     const { username } = req.userData;
-    const chats = (
+    const chats: string[] = (
       await this.userModel.findOne({
         username: username,
       })
     )?.chats;
     if (!chats) return new HttpException("can't find the user", 404);
-    return chats;
+    // eslint-disable-next-line prefer-const
+    let participants = {};
+    for (const chat of chats) {
+      const result = await this.roomModel.findById(chat);
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      //@ts-ignore
+      participants[chat] = result.participants;
+    }
+    return participants;
   }
 
   async findUsers(
@@ -42,14 +52,22 @@ export class ChatInterfaceService {
         { username: participant },
         { $addToSet: { chats: newRoom._id } },
       );
-      if (!result) declinedUsers.push(participant);
+      if (!result) {
+        declinedUsers.push(participant);
+        continue;
+      }
       newRoom.participants.push(participant);
     }
-    if (newRoom.participants.length < 2)
+    if (newRoom.participants.length < 2) {
+      await this.userModel.findOneAndUpdate(
+        { username: newRoom.participants[0] },
+        { $pull: { chats: newRoom._id } },
+      );
       throw new HttpException(
         'length of valid users must be greather than 1',
         404,
       );
+    }
     await newRoom.save();
 
     const payload: FindUserDto = {

@@ -23,9 +23,8 @@
         <h6>if you want to add someone to have a chat with, just put there their usernames separately by space!</h6>
         <input type="text" v-model='usernames' placeholder="enter username">
         <button @click.prevent="findUsers">Find</button>
-        <div id="chats">
-
-        </div>
+        <h2>{{status}}</h2>
+        <div id="chats"></div>
     </div>
     <div id="chat" class="container" hidden>
             <div class="row">
@@ -52,7 +51,7 @@
                 </div>
             </div>
     </div>
-
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 <script src="main.js"></script>
 </body>
 </html>

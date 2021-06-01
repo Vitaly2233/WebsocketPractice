@@ -22,6 +22,7 @@ const auth = new Vue({
         this.status = 'invalid username or password';
       }
       const token = await response.json();
+      if (token.statusCode === 404) return this.status('user is not found');
       document.cookie = 'token=' + token.access_token;
       if (!chat.socket) {
         chat.createSockets();
@@ -53,29 +54,54 @@ const interface = new Vue({
   el: '#interface',
   data: {
     usernames: '',
+    username: '',
+    status: '',
   },
   methods: {
     async setInterface() {
       this.username = auth.username;
-      const result = await fetch('http://localhost:8080/interface/get_chats', {
-        method: 'GET',
-      });
-      console.log(result.json());
+      this.getChats();
       document.getElementById('auth').hidden = true;
       document.getElementById('interface').hidden = false;
     },
 
+    async getChats() {
+      const result = await fetch('http://localhost:8080/interface/get_chats', {
+        method: 'GET',
+      });
+      const chats = await result.json();
+      Object.entries(chats).map((chats) => {
+        const chatId = chats[0];
+        $('#chats').empty();
+        const newButton = document.createElement('button');
+        newButton.className = chatId;
+        newButton.innerHTML = chats[1];
+        newButton.addEventListener('click', this.openChat);
+        document.body.appendChild(newButton);
+      });
+    },
+    async openChat(mouse) {
+      const result = await fetch(
+        'http://localhost:8080/:' + mouse.path[0].className,
+        { method: 'GET' },
+      );
+      console.log(result);
+    },
+
     async findUsers() {
       const users = this.usernames.split(' ');
-      console.log(users);
-      const result = await fetch('http://localhost:8080/interface/find_users', {
-        method: 'POST',
-        body: JSON.stringify(users),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      console.log(result.json());
+      const result = await (
+        await fetch('http://localhost:8080/interface/find_users', {
+          method: 'POST',
+          body: JSON.stringify(users),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+      ).json();
+      if (result.statusCode === 404)
+        return (this.status = 'cannot find the users');
+      this.getChats();
     },
   },
 });
@@ -125,6 +151,9 @@ const chat = new Vue({
       this.socket.on('deleteAllMessages', () => {
         this.messages = [];
       });
+    },
+    cleseSocket() {
+      this.socket = null;
     },
   },
 });

@@ -17,7 +17,9 @@ import { FindUserDto } from './dto/find-user.dto';
 export class ChatInterfaceController {
   constructor(private chatInterfaceService: ChatInterfaceService) {}
   @Get('get_chats')
-  getChats(@Req() req: Request): Promise<string[] | HttpException> {
+  getChats(
+    @Req() req: Request,
+  ): Promise<Record<string, string[]> | HttpException> {
     return this.chatInterfaceService.getChats(req);
   }
 
