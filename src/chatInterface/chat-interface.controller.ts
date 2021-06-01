@@ -7,7 +7,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { ChatInterfaceGuard } from './chat-interface.guard';
+import { ChatInterfaceGuard, myReq } from './chat-interface.guard';
 import { ChatInterfaceService } from './chat-interface.service';
 import { Request } from 'express';
 
@@ -23,7 +23,11 @@ export class ChatInterfaceController {
   @Post('find_users')
   findUserByUsername(
     @Body() body: string[],
+    @Req() req: myReq,
   ): Promise<string[] | HttpException> {
-    return this.chatInterfaceService.findUsers(body);
+    console.log('body of the find users reqest:', body);
+
+    const username = req.userData.username;
+    return this.chatInterfaceService.findUsers(body, username);
   }
 }

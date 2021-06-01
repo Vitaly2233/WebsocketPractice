@@ -65,7 +65,15 @@ const interface = new Vue({
       document.getElementById('interface').hidden = false;
     },
 
-    findUsers() {},
+    async findUsers() {
+      const data = { users: this.usernames.split(' ') };
+      console.log(data);
+      const result = await fetch('http://localhost:8080/interface/find_users', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+      console.log(result.json());
+    },
   },
 });
 
