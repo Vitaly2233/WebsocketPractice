@@ -24,9 +24,6 @@ const auth = new Vue({
       const token = await response.json();
       if (token.statusCode === 404) return this.status('user is not found');
       document.cookie = 'token=' + token.access_token;
-      if (!chat.socket) {
-        chat.createSockets();
-      }
       interface.setInterface();
     },
 
@@ -81,11 +78,8 @@ const interface = new Vue({
       });
     },
     async openChat(mouse) {
-      const result = await fetch(
-        'http://localhost:8080/:' + mouse.path[0].className,
-        { method: 'GET' },
-      );
-      console.log(result);
+      document.cookie = 'currentRoom=' + mouse.path[0].className;
+      chat.createSockets();
     },
 
     async findUsers() {
@@ -109,13 +103,19 @@ const interface = new Vue({
 const chat = new Vue({
   el: '#chat',
   data: {
-    title: 'chat',
     name: '',
     text: '',
     messages: [],
+    participants: '',
     socket: null,
   },
   methods: {
+    openChat() {
+      document.getElementById('auth').hidden = true;
+      document.getElementById('interface').hidden = true;
+      document.getElementById('chat').hidden = false;
+    },
+
     sendMessage() {
       if (this.validateInput()) {
         const message = {
@@ -137,8 +137,11 @@ const chat = new Vue({
       this.socket.emit('deleteAllMessages');
     },
 
-    createSockets() {
-      this.socket = io('http://localhost:8080');
+    async createSockets() {
+      this.socket = await io('http://localhost:8080/kbk');
+      if (!this.socket)
+        return (interface.status =
+          "can't open the chat, you're probably not authorized");
 
       this.socket.on('sendMesssageToAll', (message) => {
         this.receivedMessage(message);
@@ -151,8 +154,11 @@ const chat = new Vue({
       this.socket.on('deleteAllMessages', () => {
         this.messages = [];
       });
+
+      this.openChat();
     },
-    cleseSocket() {
+
+    closeSocket() {
       this.socket = null;
     },
   },

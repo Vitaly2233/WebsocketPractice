@@ -13,79 +13,29 @@ import { Model } from 'mongoose';
 import { MessageDocument } from './schemas/message.schema';
 import { MessageDto } from './dto/message.dto';
 import { UseGuards } from '@nestjs/common';
-// import { ChatGuard } from './chat.guard';
 import { UserDocument } from 'src/auth/dto/user.schema';
+import { MessageGuard } from './message.guard';
+import { ActiveConnectedService } from './active-connected.service';
 // import { RoomDocument } from './schemas/rooms.schema';
 // import { ActiveConnectionsService } from './active-connections.service';
 
-// @UseGuards(ChatGuard)
 @WebSocketGateway()
+@UseGuards(MessageGuard)
 export class ChatGateway implements OnGatewayConnection {
   constructor(
-    @InjectModel('ms') private messages: Model<MessageDocument>, // @InjectModel('room') private rooms: Model<RoomDocument>, // @InjectModel('user') private users: Model<UserDocument>,
-  ) // private activeConnections: ActiveConnectionsService,
-  {}
+    @InjectModel('ms') private messages: Model<MessageDocument>,
+    private activeConnectedService: ActiveConnectedService,
+  ) {}
 
   async handleConnection(client: any, ...args: any[]) {
-    // this.activeConnections.addConnection(client);
-    // console.log('Active connectted users', this.activeConnections.getActive());
+    const cookie = client.handshake?.headers?.cookie;
+    if (!cookie) throw new WsException('cookies are missing');
+    this.activeConnectedService.addActiveConnected(client.id, cookie);
+    client.join();
   }
 
   @WebSocketServer() server: Server;
 
-  // @SubscribeMessage('getUsersRooms')
-  // async getUserRooms(@ConnectedSocket() client) {
-  //   const user = await this.users.findOne({ username: client.data.username });
-  //   const roomIds = user.rooms;
-  //   const userRooms: Array<string[]> = [];
-
-  //   for (const roomId of roomIds) {
-  //     const room = await this.rooms.findById(roomId);
-  //     const participantsOfTheRoom = room?.participants;
-
-  //     if (!participantsOfTheRoom) throw new WsException('user is not found');
-
-  //     userRooms.push(participantsOfTheRoom);
-  //   }
-
-  //   client.emit('getUsersRooms', userRooms);
-  // }
-
-  // @SubscribeMessage('findUSer')
-  // async findUser(
-  //   @ConnectedSocket() client,
-  //   @MessageBody() participants: string[],
-  // ) {
-  //   participants.push(client.data.username);
-  //   if (hasDuplicates(participants))
-  //     throw new WsException('Payload has dublicates');
-  //   const newRoom = new this.rooms({
-  //     participants: participants,
-  //   });
-
-  //   console.log(participants);
-
-  // adding to each user new room and if they're connected, sending it to them
-  // participants.forEach(async (otherUser) => {
-  //   try {
-  //     await this.users.findOneAndUpdate(
-  //       {
-  //         username: otherUser,
-  //       },
-  //       { $addToSet: { rooms: newRoom._id } },
-  //     );
-  //   } catch (e) {
-  //     return;
-  //   }
-  //   // if user is now connected, sending that they're connected to the new room also to the client
-  //   if (this.activeConnections.getActive()[otherUser]) {
-  //     this.server
-  //       .to(this.activeConnections.getActive()[otherUser])
-  //       .emit('addNewRoom', newRoom.participants);
-  //   }
-  // });
-  // await newRoom.save();
-  // }
   @SubscribeMessage('msgToServer')
   handleMessage(client: Socket, payload): void {
     new this.messages({
