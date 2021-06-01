@@ -57,9 +57,10 @@ const interface = new Vue({
   methods: {
     async setInterface() {
       this.username = auth.username;
-      const result = await fetch('http://localhost:8080/interface/get_users', {
+      const result = await fetch('http://localhost:8080/interface/get_chats', {
         method: 'GET',
       });
+      console.log(result.json());
       document.getElementById('auth').hidden = true;
       document.getElementById('interface').hidden = false;
     },

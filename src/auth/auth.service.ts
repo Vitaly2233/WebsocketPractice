@@ -32,8 +32,6 @@ export class AuthService {
   }
 
   async login(body: User): Promise<HttpException | JwtTokenDto> {
-    console.log(body);
-
     const { username, password } = body;
     const user = await this.userModel.findOne({ username: username });
     if (!user)
