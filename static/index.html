@@ -11,12 +11,21 @@
     <script type="text/javascript" src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
 </head>
 <body>
-    <div id="interface">
+    <div id="auth">
         <input type="text" placeholder="enter username" v-model="username">
         <input type="text" placeholder="enter password" v-model="password">
         <button @click.prevent="login">login</button>
         <button @click.prevent="register">register</button>
         <h3>{{status}}</h3>
+    </div>
+    <div id="interface" hidden>
+        <h3> Hi, {{username}}, here is you'r chats </h3>
+        <h6>if you want to add someone to have a chat with, just put there their usernames separately by space!</h6>
+        <input type="text" v-model='usernames' placeholder="enter username">
+        <button @click.prevent="findUsers">Submit</button>
+        <div id="chats">
+
+        </div>
     </div>
     <div id="chat" class="container" hidden>
             <div class="row">

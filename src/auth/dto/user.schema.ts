@@ -15,6 +15,9 @@ export class User {
   @Length(4, 16)
   @Prop()
   password: string;
+
+  @Prop({ default: [] })
+  chats: string[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

@@ -1,5 +1,5 @@
-const interface = new Vue({
-  el: '#interface',
+const auth = new Vue({
+  el: '#auth',
   data: {
     status: '',
     username: '',
@@ -23,6 +23,10 @@ const interface = new Vue({
       }
       const token = await response.json();
       document.cookie = 'token=' + token.access_token;
+      if (!chat.socket) {
+        chat.createSockets();
+      }
+      interface.setInterface();
     },
 
     async register() {
@@ -42,6 +46,25 @@ const interface = new Vue({
           'password must contain from 4 to 16 symbols, username too');
       this.status = 'success';
     },
+  },
+});
+
+const interface = new Vue({
+  el: '#interface',
+  data: {
+    usernames: '',
+  },
+  methods: {
+    async setInterface() {
+      this.username = auth.username;
+      const result = await fetch('http://localhost:8080/interface/get_users', {
+        method: 'GET',
+      });
+      document.getElementById('auth').hidden = true;
+      document.getElementById('interface').hidden = false;
+    },
+
+    findUsers() {},
   },
 });
 
