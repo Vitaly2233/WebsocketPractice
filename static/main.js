@@ -66,11 +66,14 @@ const interface = new Vue({
     },
 
     async findUsers() {
-      const data = { users: this.usernames.split(' ') };
-      console.log(data);
+      const users = this.usernames.split(' ');
+      console.log(users);
       const result = await fetch('http://localhost:8080/interface/find_users', {
         method: 'POST',
-        body: JSON.stringify(data),
+        body: JSON.stringify(users),
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
       console.log(result.json());
     },

@@ -10,6 +10,7 @@ import {
 import { ChatInterfaceGuard, myReq } from './chat-interface.guard';
 import { ChatInterfaceService } from './chat-interface.service';
 import { Request } from 'express';
+import { FindUserDto } from './dto/find-user.dto';
 
 @UseGuards(ChatInterfaceGuard)
 @Controller('interface')
@@ -24,9 +25,7 @@ export class ChatInterfaceController {
   findUserByUsername(
     @Body() body: string[],
     @Req() req: myReq,
-  ): Promise<string[] | HttpException> {
-    console.log('body of the find users reqest:', body);
-
+  ): Promise<FindUserDto | HttpException> {
     const username = req.userData.username;
     return this.chatInterfaceService.findUsers(body, username);
   }

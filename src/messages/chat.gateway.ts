@@ -22,9 +22,8 @@ import { UserDocument } from 'src/auth/dto/user.schema';
 @WebSocketGateway()
 export class ChatGateway implements OnGatewayConnection {
   constructor(
-    @InjectModel('ms') private messages: Model<MessageDocument>, // @InjectModel('room') private rooms: Model<RoomDocument>,
-  ) // @InjectModel('user') private users: Model<UserDocument>,
-  // private activeConnections: ActiveConnectionsService,
+    @InjectModel('ms') private messages: Model<MessageDocument>, // @InjectModel('room') private rooms: Model<RoomDocument>, // @InjectModel('user') private users: Model<UserDocument>,
+  ) // private activeConnections: ActiveConnectionsService,
   {}
 
   async handleConnection(client: any, ...args: any[]) {
@@ -108,8 +107,4 @@ export class ChatGateway implements OnGatewayConnection {
     await this.messages.deleteMany({});
     this.server.emit('deleteAllMessages');
   }
-}
-
-function hasDuplicates(arr) {
-  return new Set(arr).size !== arr.length;
 }

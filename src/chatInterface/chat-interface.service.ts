@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { UserDocument } from 'src/auth/dto/user.schema';
 import { myReq } from './chat-interface.guard';
+import { FindUserDto } from './dto/find-user.dto';
 import { RoomDocument } from './shemas/room.schema';
 
 @Injectable()
@@ -26,24 +27,36 @@ export class ChatInterfaceService {
   async findUsers(
     participants: string[],
     username: string,
-  ): Promise<HttpException | string[]> {
-    console.log(participants);
-
+  ): Promise<HttpException | FindUserDto> {
     participants.push(username);
     if (hasDuplicates(participants))
       throw new HttpException('list of users contains dublicates', 404);
 
     const newRoom = new this.roomModel({
-      participants: participants,
+      participants: [],
     });
+    // eslint-disable-next-line prefer-const
+    let declinedUsers: string[] = [];
     for (const participant of participants) {
-      this.userModel.findOneAndUpdate(
+      const result: UserDocument = await this.userModel.findOneAndUpdate(
         { username: participant },
-        { $addToSet: { rooms: newRoom._id } },
+        { $addToSet: { chats: newRoom._id } },
       );
+      if (!result) declinedUsers.push(participant);
+      newRoom.participants.push(participant);
     }
+    if (newRoom.participants.length < 2)
+      throw new HttpException(
+        'length of valid users must be greather than 1',
+        404,
+      );
     await newRoom.save();
-    return participants;
+
+    const payload: FindUserDto = {
+      particiants: participants,
+      declinedUsers: declinedUsers,
+    };
+    return payload;
   }
 }
 
