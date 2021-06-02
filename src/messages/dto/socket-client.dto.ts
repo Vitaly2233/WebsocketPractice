@@ -1,6 +1,7 @@
 export class SocketClientDto {
   userData?: {
-    chatid?: string;
+    chatid: string;
+    username: string;
   };
   handshake?: {
     headers: {
@@ -12,4 +13,7 @@ export class SocketClientDto {
     return;
   }
   rooms: any;
+  emit(message: string, data: any): any {
+    return;
+  }
 }

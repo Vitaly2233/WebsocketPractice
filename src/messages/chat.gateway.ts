@@ -17,23 +17,32 @@ import { UserDocument } from 'src/auth/dto/user.schema';
 import { MessageGuard } from './message.guard';
 import { ActiveConnectedService } from './active-connected.service';
 import { SocketClientDto } from './dto/socket-client.dto';
+import { RoomDocument } from 'src/chatInterface/shemas/room.schema';
 
 @WebSocketGateway()
 @UseGuards(MessageGuard)
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     @InjectModel('ms') private messages: Model<MessageDocument>,
+    @InjectModel('room') private roomModel: Model<RoomDocument>,
     private activeConnectedService: ActiveConnectedService,
   ) {}
 
-  async handleConnection(client: SocketClientDto, ...args: any[]) {
+  async handleConnection(client: SocketClientDto) {
     // using guards for implementation?
-    const [chatId, clientId] =
+    const { chatId, clientId, participants } =
       await this.activeConnectedService.guardForNewConnected(client);
 
     this.activeConnectedService.addActiveConnected(clientId, chatId);
     await client.join(chatId);
     delete client.rooms[client.id];
+    const messages = this.roomModel.find();
+    const data = {
+      participants: participants,
+      messagesInRoom: this.roomModel,
+    };
+
+    client.emit('getData', data);
   }
 
   async handleDisconnect(client: Socket) {

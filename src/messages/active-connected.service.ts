@@ -34,7 +34,11 @@ export class ActiveConnectedService {
     if (!chatId) throw new WsException("You can't enter this room");
     const room = await this.roomModel.findById(chatId);
     if (room.id != chatId) throw new WsException("you're not in that chat");
-    return [chatId, client.id];
+    return {
+      chatId: chatId,
+      clientId: client.id,
+      participants: room.participants,
+    };
   }
 }
 

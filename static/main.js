@@ -18,8 +18,8 @@ const auth = new Vue({
         },
         body: JSON.stringify(data),
       });
-      if (response.status == 404) {
-        this.status = 'invalid username or password';
+      if (response.status == 404 || response.status == 400) {
+        return (this.status = 'invalid username or password');
       }
       const token = await response.json();
       if (token.statusCode === 404) return this.status('user is not found');
@@ -71,14 +71,15 @@ const interface = new Vue({
         const chatId = chats[0];
         $('#chats').empty();
         const newButton = document.createElement('button');
-        newButton.className = chatId;
+        newButton.className = 'chats-button ' + chatId;
         newButton.innerHTML = chats[1];
         newButton.addEventListener('click', this.openChat);
         document.body.appendChild(newButton);
       });
     },
     async openChat(mouse) {
-      document.cookie = 'currentRoom=' + mouse.path[0].className;
+      document.cookie = 'currentRoom=' + mouse.path[0].className.split(' ')[1];
+      document.cookie = 'username=' + this.username;
       chat.createSockets();
     },
 
@@ -106,12 +107,16 @@ const chat = new Vue({
     name: '',
     text: '',
     messages: [],
-    participants: '',
+    participants: [],
     socket: null,
   },
   methods: {
     openChat() {
       document.getElementById('auth').hidden = true;
+      const buttons = document.getElementsByClassName('chats-button');
+      for (let button in buttons) {
+        button.hidden = true;
+      }
       document.getElementById('interface').hidden = true;
       document.getElementById('chat').hidden = false;
     },
@@ -139,12 +144,12 @@ const chat = new Vue({
         return (interface.status =
           "can't open the chat, you're probably not authorized");
 
-      this.socket.on('sendMessage', (message) => {
-        this.receivedMessage(message);
+      this.socket.on('getData', (data) => {
+        console.log(data);
       });
 
-      this.socket.on('getAllMessages', (data) => {
-        this.messages = data;
+      this.socket.on('sendMessage', (message) => {
+        this.receivedMessage(message);
       });
 
       this.openChat();

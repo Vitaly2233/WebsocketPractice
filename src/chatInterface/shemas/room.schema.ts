@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import * as mongoose from 'mongoose';
 
 export type RoomDocument = Room & Document;
 
@@ -7,6 +7,13 @@ export type RoomDocument = Room & Document;
 export class Room {
   @Prop()
   participants: string[];
+
+  @Prop({
+    type: [{ type: mongoose.Schema.Types.ObjectId }],
+    ref: 'ms',
+    default: [],
+  })
+  messages: string[];
 }
 
 export const RoomSchema = SchemaFactory.createForClass(Room);

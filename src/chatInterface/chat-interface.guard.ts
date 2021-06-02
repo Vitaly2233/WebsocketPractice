@@ -16,13 +16,16 @@ export interface myReq extends Request {
 export class ChatInterfaceGuard implements CanActivate {
   constructor(private jwtService: JwtService) {}
 
-  canActivate(
-    context: ExecutionContext,
-  ): boolean | Promise<boolean> | Observable<boolean> {
+  async canActivate(context: ExecutionContext): Promise<any> {
     const req: myReq = context.switchToHttp().getRequest();
     const token: string = getCookieValueByName(req.headers.cookie, 'token');
+    let verifiedData: { username: string };
+    try {
+      verifiedData = await this.jwtService.verify(token);
+    } catch (e) {
+      return false;
+    }
 
-    const verifiedData = this.jwtService.verify(token);
     if (!verifiedData) return false;
     req.userData = verifiedData;
     return true;

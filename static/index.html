@@ -24,7 +24,6 @@
         <input type="text" v-model='usernames' placeholder="enter username">
         <button @click.prevent="findUsers">Find</button>
         <h2>{{status}}</h2>
-        <div id="chats"></div>
     </div>
     <div id="chat" class="container" hidden>
             <div class="row">
@@ -33,7 +32,6 @@
                     <br>
                     <div id="status"></div>
                     <div id="chat">
-                        <input type="text" v-model="name" id="username" class="form-control" placeholder="Enter name...">
                         <br>
                         <div class="card">
                             <div id="messages" class="card-block">
