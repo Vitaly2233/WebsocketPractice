@@ -11,18 +11,12 @@ import { Socket, Server } from 'socket.io';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { MessageDocument } from './schemas/message.schema';
-import { MessageDto } from './dto/message.dto';
 import { UseGuards } from '@nestjs/common';
-import { UserDocument } from 'src/auth/dto/user.schema';
 import { MessageGuard } from './message.guard';
-import { ActiveConnectedService } from './active-connected.service';
+import { GuardConnections } from './active-connected.service';
 import { SocketClientDto } from './dto/socket-client.dto';
 import { RoomDocument } from 'src/chatInterface/shemas/room.schema';
-
-interface MessageToClient {
-  username: string;
-  text: string;
-}
+import { MessageToClient } from './dto/message-to-client.dto';
 
 @WebSocketGateway()
 @UseGuards(MessageGuard)
@@ -30,19 +24,19 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     @InjectModel('ms') private messageModel: Model<MessageDocument>,
     @InjectModel('room') private roomModel: Model<RoomDocument>,
-    private activeConnectedService: ActiveConnectedService,
+    private activeConnectedService: GuardConnections,
   ) {}
 
   async handleConnection(client: SocketClientDto) {
     // using guards for implementation?
-    const { chatId, clientId, participants } =
+    const { chatId, participants } =
       await this.activeConnectedService.guardForNewConnected(client);
 
-    this.activeConnectedService.addActiveConnected(clientId, chatId);
     await client.join(chatId);
     delete client.rooms[client.id];
     const messages = await this.messageModel.find({ room: chatId });
-    let messagesToClient: Array<MessageToClient> = [];
+    // eslint-disable-next-line prefer-const
+    let messagesToClient: MessageToClient[] = [];
     for (const message of messages) {
       messagesToClient.push({ text: message.text, username: message.username });
     }
@@ -52,10 +46,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     };
 
     client.emit('getData', data);
+    console.log('user ', client.id, ' is connected');
   }
 
-  async handleDisconnect(client: Socket) {
+  async handleDisconnect(client: SocketClientDto) {
     await this.activeConnectedService.deleteActiveConnected(client);
+    console.log('user ', client.id, ' is disconected');
   }
 
   @WebSocketServer() server: Server;
@@ -81,5 +77,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     await newMessage.save();
 
     this.server.to(client.userData.chatId).emit('sendMessage', messageToClient);
+  }
+
+  @SubscribeMessage('deleteAllMessages')
+  async deleteAllMessages(
+    @ConnectedSocket() client: SocketClientDto,
+    @MessageBody() text: string,
+  ) {
+    await this.messageModel.deleteMany({ room: client.userData.chatId });
+    await this.roomModel.updateOne(
+      { room: client.userData.chatId },
+      { $set: { messages: [] } },
+    );
+    this.server.to(client.userData.chatId).emit('deleteAllMessages');
   }
 }

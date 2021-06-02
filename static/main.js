@@ -59,6 +59,7 @@ const interface = new Vue({
       this.username = auth.username;
       this.getChats();
       document.getElementById('auth').hidden = true;
+      document.getElementById('chat').hidden = true;
       document.getElementById('interface').hidden = false;
     },
 
@@ -121,6 +122,10 @@ const chat = new Vue({
       document.getElementById('chat').hidden = false;
     },
 
+    deleteAllMessages() {
+      this.socket.emit('deleteAllMessages');
+    },
+
     sendMessage() {
       if (this.validateInput()) {
         this.socket.emit('sendMessage', this.text);
@@ -152,11 +157,16 @@ const chat = new Vue({
         this.receivedMessage(message);
       });
 
+      this.socket.on('deleteAllMessages', (message) => {
+        this.messages = [];
+      });
+
       this.openChat();
     },
 
-    closeSocket() {
-      this.socket = null;
+    closeChat() {
+      this.socket.disconnect();
+      interface.setInterface();
     },
   },
 });

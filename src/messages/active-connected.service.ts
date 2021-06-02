@@ -7,20 +7,8 @@ import { RoomDocument } from 'src/chatInterface/shemas/room.schema';
 import { SocketClientDto } from './dto/socket-client.dto';
 
 @Injectable()
-export class ActiveConnectedService {
-  private activeConnected = {};
-
+export class GuardConnections {
   constructor(@InjectModel('room') private roomModel: Model<RoomDocument>) {}
-
-  getActiveConnected() {
-    return this.activeConnected;
-  }
-  // array of object contains room id and clint sockets
-  addActiveConnected(chatId: string, clientId: string) {
-    if (!this.activeConnected[chatId])
-      this.activeConnected[chatId] = [clientId];
-    else this.activeConnected[chatId].push(clientId);
-  }
 
   async deleteActiveConnected(client: Socket) {
     client.rooms = {};
