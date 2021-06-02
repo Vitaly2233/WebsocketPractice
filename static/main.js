@@ -122,7 +122,7 @@ const chat = new Vue({
           name: this.name,
           text: this.text,
         };
-        this.socket.emit('msgToServer', message);
+        this.socket.emit('sendMessage', message);
         this.text = '';
       }
     },
@@ -133,26 +133,18 @@ const chat = new Vue({
       return this.name.length > 0 && this.text.length > 0;
     },
 
-    deleteAllMessages() {
-      this.socket.emit('deleteAllMessages');
-    },
-
     async createSockets() {
-      this.socket = await io('http://localhost:8080/kbk');
+      this.socket = await io('http://localhost:8080/');
       if (!this.socket)
         return (interface.status =
           "can't open the chat, you're probably not authorized");
 
-      this.socket.on('sendMesssageToAll', (message) => {
+      this.socket.on('sendMessage', (message) => {
         this.receivedMessage(message);
       });
 
       this.socket.on('getAllMessages', (data) => {
         this.messages = data;
-      });
-
-      this.socket.on('deleteAllMessages', () => {
-        this.messages = [];
       });
 
       this.openChat();

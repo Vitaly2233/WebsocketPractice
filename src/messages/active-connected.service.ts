@@ -1,28 +1,40 @@
 import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
 import { WsException } from '@nestjs/websockets';
-
-interface ActiveConnectedDto {
-  chat: {
-    chatId: string;
-    clientIds: string[];
-  };
-}
+import { Model } from 'mongoose';
+import { Socket } from 'socket.io';
+import { RoomDocument } from 'src/chatInterface/shemas/room.schema';
+import { SocketClientDto } from './dto/socket-client.dto';
 
 @Injectable()
 export class ActiveConnectedService {
-  private activeConnected: ActiveConnectedDto[];
+  private activeConnected = {};
+
+  constructor(@InjectModel('room') private roomModel: Model<RoomDocument>) {}
 
   getActiveConnected() {
     return this.activeConnected;
   }
   // array of object contains room id and clint sockets
-  addActiveConnected(clientId: string, cookie: string) {
-    const chatId = getCookieValueByName(cookie, 'currentRoom');
-    if (!chatId) throw new WsException("You can't enter this room");
+  addActiveConnected(chatId: string, clientId: string) {
+    if (!this.activeConnected[chatId])
+      this.activeConnected[chatId] = [clientId];
+    else this.activeConnected[chatId].push(clientId);
+  }
 
-    // if (!this.activeConnected) this.activeConnected[chatId] = [clientId];
-    // else this.activeConnected[chatId].push(clientId);
-    // console.log('active connected', this.activeConnected);
+  async deleteActiveConnected(client: Socket) {
+    client.rooms = {};
+    await client.join(client.id);
+  }
+
+  async guardForNewConnected(client: SocketClientDto) {
+    const cookie = client.handshake?.headers?.cookie;
+    if (!cookie) throw new WsException('cookies are missing');
+    const chatId: string = getCookieValueByName(cookie, 'currentRoom');
+    if (!chatId) throw new WsException("You can't enter this room");
+    const room = await this.roomModel.findById(chatId);
+    if (room.id != chatId) throw new WsException("you're not in that chat");
+    return [chatId, client.id];
   }
 }
 
