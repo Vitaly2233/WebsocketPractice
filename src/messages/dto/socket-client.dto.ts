@@ -1,6 +1,6 @@
 export class SocketClientDto {
   userData?: {
-    chatid: string;
+    chatId: string;
     username: string;
   };
   handshake?: {

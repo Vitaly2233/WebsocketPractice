@@ -19,11 +19,16 @@ import { ActiveConnectedService } from './active-connected.service';
 import { SocketClientDto } from './dto/socket-client.dto';
 import { RoomDocument } from 'src/chatInterface/shemas/room.schema';
 
+interface MessageToClient {
+  username: string;
+  text: string;
+}
+
 @WebSocketGateway()
 @UseGuards(MessageGuard)
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
-    @InjectModel('ms') private messages: Model<MessageDocument>,
+    @InjectModel('ms') private messageModel: Model<MessageDocument>,
     @InjectModel('room') private roomModel: Model<RoomDocument>,
     private activeConnectedService: ActiveConnectedService,
   ) {}
@@ -36,10 +41,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.activeConnectedService.addActiveConnected(clientId, chatId);
     await client.join(chatId);
     delete client.rooms[client.id];
-    const messages = this.roomModel.find();
+    const messages = await this.messageModel.find({ room: chatId });
+    let messagesToClient: Array<MessageToClient> = [];
+    for (const message of messages) {
+      messagesToClient.push({ text: message.text, username: message.username });
+    }
     const data = {
       participants: participants,
-      messagesInRoom: this.roomModel,
+      messagesInRoom: messagesToClient,
     };
 
     client.emit('getData', data);
@@ -52,8 +61,25 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
 
   @SubscribeMessage('sendMessage')
-  async sendMessage(@ConnectedSocket() client: SocketClientDto) {
-    console.log(client.userData);
-    const messages: MessageDto[] = await this.messages.find({});
+  async sendMessage(
+    @ConnectedSocket() client: SocketClientDto,
+    @MessageBody() text: string,
+  ) {
+    const newMessage = new this.messageModel({
+      username: client.userData.username,
+      text: text,
+      room: client.userData.chatId,
+    });
+
+    const messageToClient: MessageToClient = {
+      text: newMessage.text,
+      username: newMessage.username,
+    };
+    await this.roomModel.findByIdAndUpdate(client.userData.chatId, {
+      $addToSet: { messages: newMessage._id },
+    });
+    await newMessage.save();
+
+    this.server.to(client.userData.chatId).emit('sendMessage', messageToClient);
   }
 }

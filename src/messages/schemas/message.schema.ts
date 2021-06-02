@@ -13,7 +13,7 @@ export class Message {
   text: string;
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'room', required: true })
-  room: Room;
+  room: string;
 }
 
 export const MessageSchema = SchemaFactory.createForClass(Message);

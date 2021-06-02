@@ -114,7 +114,7 @@ const chat = new Vue({
     openChat() {
       document.getElementById('auth').hidden = true;
       const buttons = document.getElementsByClassName('chats-button');
-      for (let button in buttons) {
+      for (let button of buttons) {
         button.hidden = true;
       }
       document.getElementById('interface').hidden = true;
@@ -123,11 +123,7 @@ const chat = new Vue({
 
     sendMessage() {
       if (this.validateInput()) {
-        const message = {
-          name: this.name,
-          text: this.text,
-        };
-        this.socket.emit('sendMessage', message);
+        this.socket.emit('sendMessage', this.text);
         this.text = '';
       }
     },
@@ -135,7 +131,7 @@ const chat = new Vue({
       this.messages.push(message);
     },
     validateInput() {
-      return this.name.length > 0 && this.text.length > 0;
+      return this.text.length > 0;
     },
 
     async createSockets() {
@@ -145,7 +141,11 @@ const chat = new Vue({
           "can't open the chat, you're probably not authorized");
 
       this.socket.on('getData', (data) => {
-        console.log(data);
+        this.participants = data.participants;
+        const messages = data.messagesInRoom;
+        for (const message of messages) {
+          this.receivedMessage(message);
+        }
       });
 
       this.socket.on('sendMessage', (message) => {
