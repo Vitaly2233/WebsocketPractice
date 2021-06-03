@@ -15,7 +15,7 @@ import { RoomDocument } from 'src/chatInterface/shemas/room.schema';
 import { MessageToClient } from './dto/message-to-client.dto';
 import { CookieParserInterceptor } from './cookie-parser.interceptor';
 
-@UseInterceptors(CookieParserInterceptor)
+// @UseInterceptors(CookieParserInterceptor)
 @WebSocketGateway()
 export class MessageGateway {
   constructor(
@@ -54,8 +54,15 @@ export class MessageGateway {
 
   @SubscribeMessage('connectToTheRoom')
   async connectToTheRoom(@ConnectedSocket() client: SocketClientDto) {
-    const messages = (await this.roomModel.findById(client.userData.username))
-      .messages;
+    console.log(client.userData);
+
+    const messageIds = await this.roomModel
+      .findById(client.userData.username)
+      .populate('messages');
+
+    console.log(messageIds);
+
+    // client.emit('connectToTheRoom', messages);
   }
 
   @SubscribeMessage('sendMessage')
@@ -89,5 +96,10 @@ export class MessageGateway {
       { $set: { messages: [] } },
     );
     this.server.to(client.userData.roomId).emit('deleteAllMessages');
+  }
+
+  @SubscribeMessage('test2')
+  notherTest() {
+    console.log('test2 is called');
   }
 }

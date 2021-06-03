@@ -24,7 +24,7 @@ export class ChatInterfaceGateWay
   implements OnGatewayConnection, OnGatewayDisconnect
 {
   constructor(
-    @Inject() private connectionsService: ConnectionsService,
+    private connectionsService: ConnectionsService,
     @InjectModel('user') private userModel: Model<UserDocument>,
     @InjectModel('room') private roomModel: Model<RoomDocument>, // @InjectModel('message') private messageModel: Model<MessageDocument>,
   ) {}
@@ -49,7 +49,6 @@ export class ChatInterfaceGateWay
     }
     client.emit('getChats', participants);
     // using guards for implementation?
-
     // await client.join(roomId);
     // delete client.rooms[client.id];
     // const messages = await this.messageModel.find({ room: roomId });
@@ -66,10 +65,10 @@ export class ChatInterfaceGateWay
     // client.emit('getData', data);
     // console.log('user ', client.id, ' is connected');
   }
-
   handleDisconnect(client: SocketClientDto) {
     throw new Error('Method not implemented.');
   }
+
   // @SubscribeMessage('findUsers')
   // async findUsers(
   //   @ConnectedSocket() client: SocketClientDto,
