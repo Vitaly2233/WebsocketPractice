@@ -10,10 +10,18 @@ export class Room {
 
   @Prop({
     type: [{ type: mongoose.Schema.Types.ObjectId }],
-    ref: 'ms',
+    ref: 'message',
     default: [],
   })
   messages: string[];
+
+  @Prop()
+  unread: [
+    {
+      roomId: string;
+      counter: number;
+    },
+  ];
 }
 
 export const RoomSchema = SchemaFactory.createForClass(Room);

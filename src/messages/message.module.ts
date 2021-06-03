@@ -1,16 +1,20 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { ChatGateway } from './chat.gateway';
+import { MessageGateway } from './message.gateway';
 import { MessageSchema } from './schemas/message.schema';
 import { RoomSchema } from '../chatInterface/shemas/room.schema';
-import { GuardConnections } from './active-connected.service';
+import { JwtModule } from '@nestjs/jwt';
+import { secretValue } from 'src/constants/jwt.constants';
 
 @Module({
-  providers: [ChatGateway, GuardConnections],
+  providers: [MessageGateway],
   imports: [
-    MongooseModule.forFeature([{ name: 'ms', schema: MessageSchema }]),
+    MongooseModule.forFeature([{ name: 'message', schema: MessageSchema }]),
     MongooseModule.forFeature([{ name: 'room', schema: RoomSchema }]),
+    JwtModule.register({
+      secret: secretValue,
+      signOptions: { expiresIn: '1d' },
+    }),
   ],
-  exports: [ChatGateway],
 })
 export class MessageModule {}

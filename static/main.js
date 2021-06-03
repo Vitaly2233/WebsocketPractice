@@ -53,6 +53,7 @@ const interface = new Vue({
     usernames: '',
     username: '',
     status: '',
+    socket: '',
   },
   methods: {
     async setInterface() {
@@ -64,15 +65,19 @@ const interface = new Vue({
     },
 
     async getChats() {
-      const result = await fetch('http://localhost:8080/interface/get_chats', {
-        method: 'GET',
-      });
+      this.socket = await io('http://localhost:8080/');
+      if (!this.socket)
+        return (interface.status =
+          "can't open the chat, you're probably not authorized");
+      
+      this.
+
       const chats = await result.json();
       Object.entries(chats).map((chats) => {
-        const chatId = chats[0];
+        const roomId = chats[0];
         $('#chats').empty();
         const newButton = document.createElement('button');
-        newButton.className = 'chats-button ' + chatId;
+        newButton.className = 'chats-button ' + roomId;
         newButton.innerHTML = chats[1];
         newButton.addEventListener('click', this.openChat);
         document.body.appendChild(newButton);
@@ -140,11 +145,6 @@ const chat = new Vue({
     },
 
     async createSockets() {
-      this.socket = await io('http://localhost:8080/');
-      if (!this.socket)
-        return (interface.status =
-          "can't open the chat, you're probably not authorized");
-
       this.socket.on('getData', (data) => {
         this.participants = data.participants;
         const messages = data.messagesInRoom;

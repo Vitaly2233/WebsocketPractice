@@ -3,8 +3,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UserSchema } from 'src/auth/dto/user.schema';
 import { secretValue } from 'src/constants/jwt.constants';
-import { ChatInterfaceController } from './chat-interface.controller';
-import { ChatInterfaceService } from './chat-interface.service';
+import { ConnectionsService } from './connection.service';
 import { RoomSchema } from './shemas/room.schema';
 
 @Module({
@@ -18,7 +17,6 @@ import { RoomSchema } from './shemas/room.schema';
       signOptions: { expiresIn: '1d' },
     }),
   ],
-  providers: [ChatInterfaceService],
-  controllers: [ChatInterfaceController],
+  providers: [ConnectionsService],
 })
 export class ChatInterfaceModule {}
