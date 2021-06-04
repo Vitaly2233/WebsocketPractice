@@ -60,7 +60,7 @@
 //       this.username = auth.username;
 //       this.getChats();
 //       document.getElementById('auth').hidden = true;
-//       document.getElementById('chat').hidden = true;
+//       document.getElementById('room').hidden = true;
 //       document.getElementById('interface').hidden = false;
 //     },
 
@@ -86,7 +86,7 @@
 //     async openChat(mouse) {
 //       document.cookie = 'currentRoom=' + mouse.path[0].className.split(' ')[1];
 //       document.cookie = 'username=' + this.username;
-//       chat.createSockets();
+//       room.createSockets();
 //     },
 
 //     async findUsers() {
@@ -179,8 +179,10 @@ const test = new Vue({
   methods: {
     async testGettingImages() {
       this.socket = await io('http://localhost:8080/');
-      this.socket.emit('test1');
       this.socket.emit('test2');
+      this.socket.on('newError', (data) => {
+        console.log(data);
+      });
     },
   },
 });

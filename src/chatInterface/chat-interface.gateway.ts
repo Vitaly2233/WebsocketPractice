@@ -1,4 +1,4 @@
-import { HttpException, Inject } from '@nestjs/common';
+import { HttpException, Inject, UseGuards } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import {
   ConnectedSocket,
@@ -15,10 +15,11 @@ import { UserDocument } from 'src/auth/dto/user.schema';
 import { SocketClientDto } from 'src/chatInterface/dto/socket-client.dto';
 import { MessageToClient } from 'src/messages/dto/message-to-client.dto';
 import { MessageDocument } from 'src/messages/schemas/message.schema';
-import { myReq } from './chat-interface.guard';
+import { ChatInterfaceGuard } from './chat-interface.guard';
 import { ConnectionsService } from './connection.service';
 import { RoomDocument } from './shemas/room.schema';
 
+@UseGuards(ChatInterfaceGuard)
 @WebSocketGateway()
 export class ChatInterfaceGateWay
   implements OnGatewayConnection, OnGatewayDisconnect
@@ -32,41 +33,27 @@ export class ChatInterfaceGateWay
   @WebSocketServer() server;
 
   async handleConnection(client: SocketClientDto) {
-    const { username } = await this.connectionsService.guardForNewConnected(
-      client,
-    );
-    const chatIds: string[] = (
-      await this.userModel.findOne({
-        username: username,
-      })
-    )?.chats;
-    if (!chatIds) return new HttpException("can't find the user", 404);
-    // eslint-disable-next-line prefer-const
-    let participants: Record<string, string[]> = {};
-    for (const chat of chatIds) {
-      const result = await this.roomModel.findById(chat);
-      participants[chat] = result.participants;
-    }
-    client.emit('getChats', participants);
-    // using guards for implementation?
-    // await client.join(roomId);
-    // delete client.rooms[client.id];
-    // const messages = await this.messageModel.find({ room: roomId });
-    // // eslint-disable-next-line prefer-const
-    // let messagesToClient: MessageToClient[] = [];
-    // for (const message of messages) {
-    //   messagesToClient.push({ text: message.text, username: message.username });
-    // }
-    // const data = {
-    //   participants: participants,
-    //   messagesInRoom: messagesToClient,
-    // };
+    console.log('connected');
 
-    // client.emit('getData', data);
-    // console.log('user ', client.id, ' is connected');
+    // const { username } = await this.connectionsService.guardForNewConnected(
+    //   client,
+    // );
+    // const roomIds: string[] = (
+    //   await this.userModel.findOne({
+    //     username: username,
+    //   })
+    // )?.chats;
+    // // eslint-disable-next-line prefer-const
+    // let participants: Record<string, string[]> = {};
+    // for (const room of roomIds) {
+    //   const result = await this.roomModel.findById(room);
+    //   participants[room] = result.participants;
+    // }
+    // client.emit('getChats', participants);
   }
-  handleDisconnect(client: SocketClientDto) {
-    throw new Error('Method not implemented.');
+  async handleDisconnect(client: SocketClientDto) {
+    // await this.connectionsService.deleteActiveConnected(client);
+    // console.log('user ', client.id, ' is disconected');
   }
 
   // @SubscribeMessage('findUsers')

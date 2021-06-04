@@ -5,7 +5,7 @@ import {
   ConnectedSocket,
   MessageBody,
 } from '@nestjs/websockets';
-import { Socket, Server } from 'socket.io';
+import { Server } from 'socket.io';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { MessageDocument } from './schemas/message.schema';
@@ -15,40 +15,13 @@ import { RoomDocument } from 'src/chatInterface/shemas/room.schema';
 import { MessageToClient } from './dto/message-to-client.dto';
 import { CookieParserInterceptor } from './cookie-parser.interceptor';
 
-// @UseInterceptors(CookieParserInterceptor)
 @WebSocketGateway()
+@UseInterceptors(CookieParserInterceptor)
 export class MessageGateway {
   constructor(
     @InjectModel('message') private messageModel: Model<MessageDocument>,
     @InjectModel('room') private roomModel: Model<RoomDocument>,
   ) {}
-
-  // async handleConnection(client: SocketClientDto) {
-  //   // using guards for implementation?
-  //   const { roomId, participants } =
-  //     await this.activeConnectedService.guardForNewConnected(client);
-
-  //   await client.join(roomId);
-  //   delete client.rooms[client.id];
-  //   const messages = await this.messageModel.find({ room: roomId });
-  //   // eslint-disable-next-line prefer-const
-  //   let messagesToClient: MessageToClient[] = [];
-  //   for (const message of messages) {
-  //     messagesToClient.push({ text: message.text, username: message.username });
-  //   }
-  //   const data = {
-  //     participants: participants,
-  //     messagesInRoom: messagesToClient,
-  //   };
-
-  //   client.emit('getData', data);
-  //   console.log('user ', client.id, ' is connected');
-  // }
-
-  // async handleDisconnect(client: SocketClientDto) {
-  //   await this.activeConnectedService.deleteActiveConnected(client);
-  //   console.log('user ', client.id, ' is disconected');
-  // }
 
   @WebSocketServer() server: Server;
 
@@ -99,7 +72,7 @@ export class MessageGateway {
   }
 
   @SubscribeMessage('test2')
-  notherTest() {
-    console.log('test2 is called');
+  async test2(@ConnectedSocket() client: SocketClientDto) {
+    console.log('here');
   }
 }

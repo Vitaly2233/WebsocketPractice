@@ -19,30 +19,23 @@ export class CookieParserInterceptor implements NestInterceptor {
     private jwtService: JwtService,
   ) {}
 
-  async intercept(
-    context: ExecutionContext,
-    next: CallHandler<any>,
-  ): Promise<Observable<any>> {
+  async intercept(context: ExecutionContext): Promise<Observable<any>> {
     const client = context.switchToWs().getClient();
-    const cookie = client.handshake?.headers?.cookie;
-    if (!cookie) throw new WsException('token is missing');
-    const roomId = getCookieValueByName(cookie, 'currentRoom');
-    if (!roomId) throw new WsException('token is missing');
-    const room = await this.roomModel.findById(roomId);
-    if (room.id != roomId) throw new WsException('token is missing');
-
-    const token: string = getCookieValueByName(cookie, 'token');
-    let verifiedData: TokenDataDto;
     try {
-      verifiedData = await this.jwtService.verify(token);
-    } catch (e) {
-      throw new WsException('token is missing');
-    }
+      const cookie = client.handshake.headers.cookie;
+      const roomId = getCookieValueByName(cookie, 'currentRoom');
+      const room = await this.roomModel.findById(roomId);
 
-    client.userData = {
-      room: room,
-      username: verifiedData.username,
-    };
+      const token: string = getCookieValueByName(cookie, 'token');
+      const verifiedData: TokenDataDto = await this.jwtService.verify(token);
+
+      client.userData = {
+        room: room,
+        username: verifiedData.username,
+      };
+    } catch (e) {
+      await client.emit('newError', { message: "you're not authorized" });
+    }
     return client;
   }
 }

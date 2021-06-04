@@ -22,24 +22,18 @@ export class ConnectionsService {
   }
 
   async guardForNewConnected(client: SocketClientDto) {
-    const cookie = client.handshake?.headers?.cookie;
-    if (!cookie) throw new WsException('cookies are missing');
-
-    const roomId: string = getCookieValueByName(cookie, 'currentRoom');
-    const room = await this.roomModel.findById(roomId);
-    if (room.id != roomId) throw new WsException("you're not in that chat");
-
-    const token: string = getCookieValueByName(cookie, 'token');
-    let verifiedData: TokenDataDto;
-    try {
-      verifiedData = await this.jwtService.verify(token);
-    } catch (e) {
-      throw new WsException('token is missing');
-    }
-
-    this.activeConnected.push(client.id);
-
-    return { username: verifiedData.username };
+    // try {
+    //   const cookie = client.handshake?.headers?.cookie;
+    //   if (!cookie) throw new WsException('cookies are missing');
+    //   const roomId: string = getCookieValueByName(cookie, 'currentRoom');
+    //   const room = await this.roomModel.findById(roomId);
+    //   const token: string = getCookieValueByName(cookie, 'token');
+    //   const verifiedData: TokenDataDto = await this.jwtService.verify(token);
+    //   this.activeConnected.push(client.id);
+    // } catch (e) {
+    //   client.emit('newError', { message: "you're not authorized" });
+    // }
+    // return { username: verifiedData.username };
   }
 }
 
