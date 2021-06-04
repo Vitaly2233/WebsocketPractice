@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { MessageGateway } from './message.gateway';
 import { MessageSchema } from './schemas/message.schema';
-import { RoomSchema } from '../chatInterface/shemas/room.schema';
+import { RoomSchema } from '../chat-interface/shemas/room.schema';
 import { JwtModule } from '@nestjs/jwt';
 import { secretValue } from 'src/constants/jwt.constants';
 

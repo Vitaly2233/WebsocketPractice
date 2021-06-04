@@ -5,13 +5,12 @@ import {
   ConnectedSocket,
   MessageBody,
 } from '@nestjs/websockets';
-import { Server } from 'socket.io';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { MessageDocument } from './schemas/message.schema';
 import { UseGuards, UseInterceptors } from '@nestjs/common';
-import { SocketClientDto } from '../chatInterface/dto/socket-client.dto';
-import { RoomDocument } from 'src/chatInterface/shemas/room.schema';
+import { ISocketClient } from '../chat-interface/interface/socket-client';
+import { RoomDocument } from 'src/chat-interface/shemas/room.schema';
 import { MessageToClient } from './dto/message-to-client.dto';
 import { CookieParserInterceptor } from './cookie-parser.interceptor';
 
@@ -23,10 +22,10 @@ export class MessageGateway {
     @InjectModel('room') private roomModel: Model<RoomDocument>,
   ) {}
 
-  @WebSocketServer() server: Server;
+  @WebSocketServer() server: ISocketClient;
 
   @SubscribeMessage('connectToTheRoom')
-  async connectToTheRoom(@ConnectedSocket() client: SocketClientDto) {
+  async connectToTheRoom(@ConnectedSocket() client: ISocketClient) {
     console.log(client.userData);
 
     const messageIds = await this.roomModel
@@ -40,7 +39,7 @@ export class MessageGateway {
 
   @SubscribeMessage('sendMessage')
   async sendMessage(
-    @ConnectedSocket() client: SocketClientDto,
+    @ConnectedSocket() client: ISocketClient,
     @MessageBody() text: string,
   ) {
     const newMessage = new this.messageModel({
@@ -62,17 +61,12 @@ export class MessageGateway {
   }
 
   @SubscribeMessage('deleteAllMessages')
-  async deleteAllMessages(@ConnectedSocket() client: SocketClientDto) {
+  async deleteAllMessages(@ConnectedSocket() client: ISocketClient) {
     await this.messageModel.deleteMany({ room: client.userData.roomId });
     await this.roomModel.updateOne(
       { room: client.userData.roomId },
       { $set: { messages: [] } },
     );
     this.server.to(client.userData.roomId).emit('deleteAllMessages');
-  }
-
-  @SubscribeMessage('test2')
-  async test2(@ConnectedSocket() client: SocketClientDto) {
-    console.log('here');
   }
 }

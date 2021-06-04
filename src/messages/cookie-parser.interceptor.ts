@@ -9,8 +9,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { WsException } from '@nestjs/websockets';
 import { Model } from 'mongoose';
 import { Observable } from 'rxjs';
-import { TokenDataDto } from 'src/chatInterface/dto/token-data.dto';
-import { RoomDocument } from 'src/chatInterface/shemas/room.schema';
+import { ITokenData } from 'src/chat-interface/interface/token-data';
+import { RoomDocument } from 'src/chat-interface/shemas/room.schema';
 
 @Injectable()
 export class CookieParserInterceptor implements NestInterceptor {
@@ -26,13 +26,7 @@ export class CookieParserInterceptor implements NestInterceptor {
       const roomId = getCookieValueByName(cookie, 'currentRoom');
       const room = await this.roomModel.findById(roomId);
 
-      const token: string = getCookieValueByName(cookie, 'token');
-      const verifiedData: TokenDataDto = await this.jwtService.verify(token);
-
-      client.userData = {
-        room: room,
-        username: verifiedData.username,
-      };
+      client.userData.room = room;
     } catch (e) {
       await client.emit('newError', { message: "you're not authorized" });
     }

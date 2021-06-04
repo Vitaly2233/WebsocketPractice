@@ -1,8 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { IsString, Length } from 'class-validator';
 import { Document } from 'mongoose';
+import * as mongoose from 'mongoose';
 
-export type UserDocument = User & Document;
+export type UserDocument = User & mongoose.Document;
 
 @Schema()
 export class User {
@@ -16,8 +17,12 @@ export class User {
   @Prop()
   password: string;
 
-  @Prop({ default: [] })
-  chats: string[];
+  @Prop({
+    type: [{ type: mongoose.Schema.Types.ObjectId }],
+    ref: 'room',
+    default: [],
+  })
+  rooms: string[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
