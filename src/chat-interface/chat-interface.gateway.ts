@@ -16,16 +16,16 @@ import { ISocketClient } from 'src/chat-interface/interface/socket-client';
 import { TokenGuard } from 'src/guards/token.guard';
 import { MessageToClient } from 'src/messages/dto/message-to-client.dto';
 import { MessageDocument } from 'src/messages/schemas/message.schema';
-import { ConnectionsService } from './connection.service';
-import { RoomDocument } from './shemas/room.schema';
+import { ChatInterfaceService } from './chat-interface.service';
+import { RoomDocument } from './schema/room.schema';
 
-@UseGuards(TokenGuard)
+// @UseGuards(TokenGuard)
 @WebSocketGateway()
 export class ChatInterfaceGateWay
   implements OnGatewayConnection, OnGatewayDisconnect
 {
   constructor(
-    private connectionsService: ConnectionsService,
+    private ChatInterfaceService: ChatInterfaceService,
     @InjectModel('user') private userModel: Model<UserDocument>,
     @InjectModel('room') private roomModel: Model<RoomDocument>, // @InjectModel('message') private messageModel: Model<MessageDocument>,
   ) {}
@@ -33,42 +33,14 @@ export class ChatInterfaceGateWay
   @WebSocketServer() server;
 
   async handleConnection(client: ISocketClient) {
-    await this.connectionsService.handleConnection(client);
+    await this.ChatInterfaceService.handleConnection(client);
   }
   async handleDisconnect(client: ISocketClient) {
-    // await this.connectionsService.deleteActiveConnected(client);
-    // console.log('user ', client.id, ' is disconected');
-  }
-
-  @SubscribeMessage('findUsers')
-  async findUsers(
-    @ConnectedSocket() client: ISocketClient,
-    @MessageBody() participants: string[],
-  ): Promise<any> {
-    // const { username } = client.userData;
-    // participants.push(username);
-    // const newRoom = new this.roomModel({
-    //   participants: participants,
-    // });
-    // for (const participant of participants) {
-    // }
-  }
-
-  @SubscribeMessage('connectToTheRoom')
-  connectToTheRoom(
-    @ConnectedSocket() client: ISocketClient,
-    @MessageBody() roomId: string[],
-  ) {
-    console.log('connected to the room');
+    // await this.ChatInterfaceService.deleteActiveConnected(client);
   }
 
   @SubscribeMessage('test')
-  async test() {
-    // const res = await this.userModel.findById('60b781f8c12d612b78872abf');
-    // const ress = await res.populate('rooms');
+  async test(client: ISocketClient) {
+    // this.connectToTheRoom(client, ['1212']);
   }
-}
-
-function hasDuplicates(arr: string[]) {
-  return new Set(arr).size !== arr.length;
 }

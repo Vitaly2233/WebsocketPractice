@@ -10,7 +10,7 @@ import { WsException } from '@nestjs/websockets';
 import { Model } from 'mongoose';
 import { Observable } from 'rxjs';
 import { ITokenData } from 'src/chat-interface/interface/token-data';
-import { RoomDocument } from 'src/chat-interface/shemas/room.schema';
+import { RoomDocument } from 'src/chat-interface/schema/room.schema';
 
 @Injectable()
 export class CookieParserInterceptor implements NestInterceptor {

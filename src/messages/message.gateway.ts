@@ -10,14 +10,18 @@ import { Model } from 'mongoose';
 import { MessageDocument } from './schemas/message.schema';
 import { UseGuards, UseInterceptors } from '@nestjs/common';
 import { ISocketClient } from '../chat-interface/interface/socket-client';
-import { RoomDocument } from 'src/chat-interface/shemas/room.schema';
+import { RoomDocument } from 'src/chat-interface/schema/room.schema';
 import { MessageToClient } from './dto/message-to-client.dto';
 import { CookieParserInterceptor } from './cookie-parser.interceptor';
+import { TokenGuard } from 'src/guards/token.guard';
+import { MessageService } from './message.service';
 
 @WebSocketGateway()
+@UseGuards(TokenGuard)
 @UseInterceptors(CookieParserInterceptor)
 export class MessageGateway {
   constructor(
+    private messageService: MessageService,
     @InjectModel('message') private messageModel: Model<MessageDocument>,
     @InjectModel('room') private roomModel: Model<RoomDocument>,
   ) {}
@@ -68,5 +72,10 @@ export class MessageGateway {
       { $set: { messages: [] } },
     );
     this.server.to(client.userData.roomId).emit('deleteAllMessages');
+  }
+
+  @SubscribeMessage('test2')
+  async test(client) {
+    this.messageService.getAllMessages(client, 'sdf');
   }
 }

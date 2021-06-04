@@ -13,4 +13,6 @@ export interface ISocketClient {
 
   rooms: any;
   emit(message: string, data: any): any;
+
+  to(sendToWhom: string): any;
 }

@@ -5,7 +5,7 @@ import { ITokenData } from 'src/chat-interface/interface/token-data';
 
 @Injectable()
 export class TokenGuard implements CanActivate {
-  constructor(private jwtService: JwtService) {}
+  // constructor(private jwtService: JwtService) {}
 
   async canActivate(context: ExecutionContext): Promise<any> {
     // try {
@@ -17,6 +17,8 @@ export class TokenGuard implements CanActivate {
     // } catch (e) {
     //   return false;
     // }
+    console.log('guard is called');
+
     return true;
   }
 }
