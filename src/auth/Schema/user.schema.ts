@@ -2,6 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { IsString, Length } from 'class-validator';
 import { Document } from 'mongoose';
 import * as mongoose from 'mongoose';
+import { Room } from 'src/chat-interface/schema/room.schema';
 
 export type UserDocument = User & mongoose.Document;
 
@@ -22,7 +23,15 @@ export class User {
     ref: 'room',
     default: [],
   })
-  rooms: string[];
+  rooms: string[] | Room[];
+
+  @Prop()
+  unread: [
+    {
+      roomId: string;
+      counter: number;
+    },
+  ];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

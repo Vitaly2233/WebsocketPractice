@@ -5,10 +5,10 @@ export type MessageDocument = Message & mongoose.Document;
 
 @Schema()
 export class Message {
-  @Prop()
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'user', required: true })
   username: string;
 
-  @Prop()
+  @Prop({ required: true })
   text: string;
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'room', required: true })

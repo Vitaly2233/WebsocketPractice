@@ -1,4 +1,4 @@
-export class MessageToClient {
+export interface MessageFrontend {
   username: string;
   text: string;
 }

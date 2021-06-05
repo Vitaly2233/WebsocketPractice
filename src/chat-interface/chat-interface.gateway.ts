@@ -14,8 +14,8 @@ import { Model } from 'mongoose';
 import { UserDocument } from 'src/auth/Schema/user.schema';
 import { ISocketClient } from 'src/chat-interface/interface/socket-client';
 import { TokenGuard } from 'src/guards/token.guard';
-import { MessageToClient } from 'src/messages/dto/message-to-client.dto';
-import { MessageDocument } from 'src/messages/schemas/message.schema';
+import { MessageFrontend } from 'src/messages/interface/message-frontend';
+import { MessageDocument } from 'src/messages/schema/message.schema';
 import { ChatInterfaceService } from './chat-interface.service';
 import { RoomDocument } from './schema/room.schema';
 
@@ -41,6 +41,6 @@ export class ChatInterfaceGateWay
 
   @SubscribeMessage('test')
   async test(client: ISocketClient) {
-    // this.connectToTheRoom(client, ['1212']);
+    this.ChatInterfaceService.test(client);
   }
 }

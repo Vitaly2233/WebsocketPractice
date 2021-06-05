@@ -23,8 +23,6 @@ export class ChatInterfaceService {
 
   async handleConnection(client: ISocketClient) {
     // if user is already connecteed to this room, add checking if he's in the room
-    this.messsageService.getAllMessages(client, 'da');
-
     // const cookie: string | undefined = client?.handshake?.headers?.cookie;
     // if (!cookie)
     //   return client.emit('newError', { message: "you're not authorized" });
@@ -49,7 +47,6 @@ export class ChatInterfaceService {
     //   // if user is already connecteed to this room, add checking if he's in the room
     //   this.messsageService.getAllMessages(client, 'da');
     // }
-
     // const participants: Record<string, string[]> = {};
     // for (const userRoom of userRoomIds) {
     //   const result = await this.roomModel.findById(userRoom);
@@ -65,5 +62,8 @@ export class ChatInterfaceService {
   async deleteActiveConnected(client: ISocketClient) {
     client.rooms = {};
     await client.join(client.id);
+  }
+  async test(client: ISocketClient) {
+    this.messsageService.getAllMessages(client, 'sad');
   }
 }
