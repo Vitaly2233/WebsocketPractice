@@ -21,15 +21,14 @@ export class CookieParserInterceptor implements NestInterceptor {
 
   async intercept(context: ExecutionContext): Promise<Observable<any>> {
     const client = context.switchToWs().getClient();
-    try {
-      const cookie = client.handshake.headers.cookie;
-      const roomId = getCookieValueByName(cookie, 'currentRoom');
-      const room = await this.roomModel.findById(roomId);
-
-      client.userData.room = room;
-    } catch (e) {
-      await client.emit('newError', { message: "you're not authorized" });
-    }
+    // try {
+    //   const cookie = client.handshake.headers.cookie;
+    //   const roomId = getCookieValueByName(cookie, 'currentRoom');
+    //   const room = await this.roomModel.findById(roomId);
+    //   client.userData.room = room;
+    // } catch (e) {
+    //   await client.emit('newError', { message: "you're not authorized" });
+    // }
     return client;
   }
 }

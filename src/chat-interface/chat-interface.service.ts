@@ -63,7 +63,4 @@ export class ChatInterfaceService {
     client.rooms = {};
     await client.join(client.id);
   }
-  async test(client: ISocketClient) {
-    this.messsageService.getAllMessages(client, 'sad');
-  }
 }

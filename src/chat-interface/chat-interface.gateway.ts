@@ -38,9 +38,4 @@ export class ChatInterfaceGateWay
   async handleDisconnect(client: ISocketClient) {
     // await this.ChatInterfaceService.deleteActiveConnected(client);
   }
-
-  @SubscribeMessage('test')
-  async test(client: ISocketClient) {
-    this.ChatInterfaceService.test(client);
-  }
 }

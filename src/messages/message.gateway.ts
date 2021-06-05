@@ -8,7 +8,7 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { MessageDocument } from './schema/message.schema';
-import { UseGuards, UseInterceptors } from '@nestjs/common';
+import { UseFilters, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ISocketClient } from '../chat-interface/interface/socket-client';
 import { RoomDocument } from 'src/chat-interface/schema/room.schema';
 import { MessageFrontend } from './interface/message-frontend';
