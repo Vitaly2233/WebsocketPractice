@@ -4,6 +4,7 @@ import {
   WebSocketServer,
   ConnectedSocket,
   MessageBody,
+  WsException,
 } from '@nestjs/websockets';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -63,6 +64,9 @@ export class MessageGateway {
 
   @SubscribeMessage('test2')
   async test(client) {
-    this.messageService.getAllMessages(client, 'sdf');
+    // console.log('here');
+    throw new WsException('custom message');
+    // return { message: 'message', participants: 'fkjhksdf' };
+    // this.messageService.getAllMessages(client, 'sdf');
   }
 }

@@ -1,5 +1,6 @@
 import { Injectable, UseGuards } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { WsException } from '@nestjs/websockets';
 import { Model } from 'mongoose';
 import { User } from 'src/auth/Schema/user.schema';
 import { ISocketClient } from 'src/chat-interface/interface/socket-client';
@@ -20,16 +21,14 @@ export class MessageService {
     roomId: string,
   ): Promise<boolean> {
     const room: RoomDocument = await this.roomModel.findById(roomId);
-    if (!room) client.emit('newError', { message: "you're not into the room" });
+    if (!room) throw new WsException("you're not into the room");
     const populatedRoom: RoomDocument = await room
       .populate('participants')
       .execPopulate();
 
     populatedRoom.participants.forEach((e: User) => {
       if (e.username != client.userData.roomId)
-        return client.emit('newError', {
-          message: "you're not into the room",
-        });
+        throw new WsException("you're not into the room");
     });
 
     const messages: MessageFrontend[] = [];
