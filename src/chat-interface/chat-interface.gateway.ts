@@ -19,7 +19,6 @@ import { MessageDocument } from 'src/messages/schema/message.schema';
 import { ChatInterfaceService } from './chat-interface.service';
 import { RoomDocument } from './schema/room.schema';
 
-// @UseGuards(TokenGuard)
 @WebSocketGateway()
 export class ChatInterfaceGateWay
   implements OnGatewayConnection, OnGatewayDisconnect
@@ -32,8 +31,9 @@ export class ChatInterfaceGateWay
 
   @WebSocketServer() server;
 
+  @UseGuards(TokenGuard)
   async handleConnection(client: ISocketClient) {
-    await this.ChatInterfaceService.handleConnection(client);
+    return await this.ChatInterfaceService.handleConnection(client);
   }
   async handleDisconnect(client: ISocketClient) {
     // await this.ChatInterfaceService.deleteActiveConnected(client);

@@ -179,10 +179,11 @@ const test = new Vue({
   methods: {
     async testGettingImages() {
       this.socket = await io('http://localhost:8080/');
-      this.socket.on('newError', (data) => {
-        console.log(data);
-      });
-      this.socket.emit('test2');
+      // this.socket.on('newError', (data) => {
+      //   console.log(data);
+      // });
+      // this.socket.emit('test2');
+      this.socket.disconnect();
     },
   },
 });

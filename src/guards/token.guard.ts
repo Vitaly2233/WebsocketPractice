@@ -17,7 +17,7 @@ export class TokenGuard implements CanActivate {
     // } catch (e) {
     //   return false;
     // }
-    console.log('guard is called');
+    console.log('token guard is called');
 
     return true;
   }
