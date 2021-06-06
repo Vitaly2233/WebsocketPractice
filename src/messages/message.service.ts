@@ -21,7 +21,6 @@ export class MessageService {
     roomId: string,
   ): Promise<boolean> {
     const room: RoomDocument = await this.roomModel.findById(roomId);
-    if (!room) throw new WsException("you're not into the room");
     const populatedRoom: RoomDocument = await room
       .populate('participants')
       .execPopulate();

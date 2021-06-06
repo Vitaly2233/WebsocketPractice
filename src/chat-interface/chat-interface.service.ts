@@ -25,13 +25,13 @@ export class ChatInterfaceService {
     // if user is already connecteed to this room, add checking if he's in the room
     // const cookie: string | undefined = client?.handshake?.headers?.cookie;
     // if (!cookie)
-    //   return client.emit('newError', { message: "you're not authorized" });
+    //   return client.emit('newError',  message: "you're not authorized" );
     // const token: string | undefined = getCookieValueByName(cookie, 'token');
     // let verifiedData: ITokenData;
     // try {
     //   verifiedData = await this.jwtService.verify(token);
     // } catch (e) {
-    //   return client.emit('newError', { message: "you're not authorized" });
+    //   return client.emit('newError',  message: "you're not authorized" );
     // }
     // const { username } = verifiedData;
     // if (!username) throw new WsException('cookie is missng');

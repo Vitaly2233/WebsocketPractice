@@ -13,13 +13,15 @@ import { UseFilters, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ISocketClient } from '../chat-interface/interface/socket-client';
 import { RoomDocument } from 'src/chat-interface/schema/room.schema';
 import { MessageFrontend } from './interface/message-frontend';
-import { CookieParserInterceptor } from './cookie-parser.interceptor';
+// import { CookieParserInterceptor } from './cookie-parser.interceptor';
 import { TokenGuard } from 'src/guards/token.guard';
 import { MessageService } from './message.service';
+import { ExceptionInterceptor } from './exception.interceptor';
+import { CookieParserInterceptor } from './cookie-parser.interceptor';
 
 @WebSocketGateway()
 @UseGuards(TokenGuard)
-@UseInterceptors(CookieParserInterceptor)
+@UseInterceptors(ExceptionInterceptor, CookieParserInterceptor)
 export class MessageGateway {
   constructor(
     private messageService: MessageService,
@@ -64,9 +66,7 @@ export class MessageGateway {
 
   @SubscribeMessage('test2')
   async test(client) {
-    // console.log('here');
-    throw new WsException('custom message');
-    // return { message: 'message', participants: 'fkjhksdf' };
-    // this.messageService.getAllMessages(client, 'sdf');
+    // AAAAAAAAAAAAAAAAAAA FUCKING RETURN
+    // return this.messageService.getAllMessages(client, 'sdf');
   }
 }
