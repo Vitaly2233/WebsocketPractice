@@ -25,14 +25,14 @@ export class MessageService {
       .populate('participants')
       .execPopulate();
 
-    populatedRoom.participants.forEach((e: User) => {
-      if (e.username != client.userData.roomId)
+    populatedRoom.participants.forEach((participant: User) => {
+      if (participant.username != client.userData.roomId)
         throw new WsException("you're not into the room");
     });
 
     const messages: MessageFrontend[] = [];
-    populatedRoom.messages.forEach((e: MessageDocument) => {
-      messages.push({ username: e.username, text: e.text });
+    populatedRoom.messages.forEach((message: MessageDocument) => {
+      messages.push({ username: message.username, text: message.text });
     });
 
     return client.emit('getAllMessages', messages);

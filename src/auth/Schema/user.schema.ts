@@ -23,7 +23,7 @@ export class User {
     ref: 'room',
     default: [],
   })
-  rooms: mongoose.PopulatedDoc<User | string>[];
+  rooms: mongoose.PopulatedDoc<Room | string>[];
 
   @Prop()
   unread: [
