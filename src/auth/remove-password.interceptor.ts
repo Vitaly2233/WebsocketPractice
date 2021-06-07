@@ -4,15 +4,8 @@ import {
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { InjectModel } from '@nestjs/mongoose';
-import { WsException } from '@nestjs/websockets';
-import { Model } from 'mongoose';
 import { Observable } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
-import { ITokenData } from 'src/chat-interface/interface/token-data';
-import { RoomDocument } from 'src/chat-interface/schema/room.schema';
-import { UserDocument } from './Schema/user.schema';
+import { map } from 'rxjs/operators';
 
 @Injectable()
 export class RemovePasswordInterceptor implements NestInterceptor {

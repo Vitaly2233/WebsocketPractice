@@ -7,7 +7,6 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { JwtTokenDto } from './dto/token.dto';
-import { UserDataFrontendDto } from './dto/userDataFrontend.dto';
 import { RemovePasswordInterceptor } from './remove-password.interceptor';
 import { User, UserDocument } from './Schema/user.schema';
 

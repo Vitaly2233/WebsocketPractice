@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UserSchema } from 'src/auth/Schema/user.schema';
@@ -6,7 +6,7 @@ import { secretValue } from 'src/constants/jwt.constants';
 import { MessageModule } from 'src/messages/message.module';
 import { MessageService } from 'src/messages/message.service';
 import { ChatInterfaceGateWay } from './chat-interface.gateway';
-import { ChatInterfaceService } from './chat-interface.service';
+import { ConnectionService } from './connection.service';
 import { RoomSchema } from './schema/room.schema';
 
 @Module({
@@ -19,8 +19,8 @@ import { RoomSchema } from './schema/room.schema';
       secret: secretValue,
       signOptions: { expiresIn: '1d' },
     }),
-    MessageModule,
+    forwardRef(() => MessageModule),
   ],
-  providers: [ChatInterfaceService, ChatInterfaceGateWay],
+  providers: [ConnectionService, ChatInterfaceGateWay],
 })
 export class ChatInterfaceModule {}

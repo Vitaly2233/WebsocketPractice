@@ -1,7 +1,10 @@
+import { RoomDocument } from '../schema/room.schema';
+
 export interface ISocketClient {
-  userData?: {
-    roomId?: string;
+  userData: {
+    room?: RoomDocument;
     username?: string;
+    token?: string;
   };
   handshake?: {
     headers?: {

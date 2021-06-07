@@ -11,15 +11,14 @@ import { MessageDocument } from './schema/message.schema';
 import { UseGuards, UseInterceptors } from '@nestjs/common';
 import { ISocketClient } from '../chat-interface/interface/socket-client';
 import { RoomDocument } from 'src/chat-interface/schema/room.schema';
-import { MessageFrontend } from './interface/message-frontend';
 import { TokenGuard } from 'src/guards/token.guard';
 import { MessageService } from './message.service';
 import { CookieParserInterceptor } from '../auth/interceptor/cookie-parser.interceptor';
-import { ExceptionInterceptor } from 'src/auth/interceptor/exception.interceptor';
+import { OtherInterceptor } from './other.interceptor';
 
 @WebSocketGateway()
+@UseInterceptors(CookieParserInterceptor, OtherInterceptor)
 @UseGuards(TokenGuard)
-@UseInterceptors(ExceptionInterceptor, CookieParserInterceptor)
 export class MessageGateway {
   constructor(
     private messageService: MessageService,
@@ -34,32 +33,10 @@ export class MessageGateway {
     @ConnectedSocket() client: ISocketClient,
     @MessageBody() text: string,
   ) {
-    const newMessage = new this.messageModel({
-      username: client.userData.username,
-      text: text,
-      room: client.userData.roomId,
-    });
-
-    const MessageFrontend: MessageFrontend = {
-      text: newMessage.text,
-      username: newMessage.username,
-    };
-    await this.roomModel.findByIdAndUpdate(client.userData.roomId, {
-      $addToSet: { messages: newMessage._id },
-    });
-    await newMessage.save();
-
-    this.server.to(client.userData.roomId).emit('sendMessage', MessageFrontend);
-  }
-
-  @SubscribeMessage('deleteAllMessages')
-  async deleteAllMessages(@ConnectedSocket() client: ISocketClient) {
-    await this.messageModel.deleteMany({ room: client.userData.roomId });
-    await this.roomModel.updateOne(
-      { room: client.userData.roomId },
-      { $set: { messages: [] } },
-    );
-    this.server.to(client.userData.roomId).emit('deleteAllMessages');
+    // const messagesFronted: MessageFrontend[] =
+    //   await this.messageService.sendMessage(client, text);
+    // const activeConnected = this.connectionService.getActiveConnected();
+    // this.server.to();
   }
 
   @SubscribeMessage('test2')

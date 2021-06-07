@@ -8,8 +8,10 @@ export class TokenGuard implements CanActivate {
   // constructor(private jwtService: JwtService) {}
 
   async canActivate(context: ExecutionContext): Promise<any> {
+    const client: ISocketClient = context.switchToHttp().getRequest();
+    console.log(client.userData?.token);
+
     // try {
-    //   const client: ISocketClient = context.switchToHttp().getRequest();
     //   const cookie = client.handshake.headers.cookie;
     //   const token: string = getCookieValueByName(cookie, 'token');
     //   const verifiedData: ITokenData = await this.jwtService.verify(token);

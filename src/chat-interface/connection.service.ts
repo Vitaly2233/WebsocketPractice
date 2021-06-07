@@ -11,8 +11,8 @@ import { ITokenData } from './interface/token-data';
 import { Room, RoomDocument } from './schema/room.schema';
 
 @Injectable()
-export class ChatInterfaceService {
-  private activeConnected: string[] = [];
+export class ConnectionService {
+  private activeConnected: Record<string, ObjectId> = {};
 
   constructor(
     private jwtService: JwtService,
@@ -20,6 +20,10 @@ export class ChatInterfaceService {
     @InjectModel('user') private userModel: Model<UserDocument>,
     @InjectModel('room') private roomModel: Model<RoomDocument>,
   ) {}
+
+  getActiveConnected() {
+    return this.activeConnected;
+  }
 
   async handleConnection(client: ISocketClient) {
     // check the valid of user data cookies etc...
@@ -42,7 +46,7 @@ export class ChatInterfaceService {
 
     const user = await this.userModel.findOne({ username: username });
     if (!user) return client.emit('newError', { message: 'user is not found' });
-    this.activeConnected.push(user._id);
+    this.activeConnected[client.id] = user._id;
     // if user is already connecteed to this room, add checking if he's in the room
     if (currentRoomId) {
       if (!this.messsageService.getAllMessages(client, currentRoomId))
@@ -64,10 +68,6 @@ export class ChatInterfaceService {
 
   async deleteActiveConnected(client: ISocketClient) {
     client.rooms = {};
-    const indexOfConnectedUSer = this.activeConnected.indexOf(
-      client.userData.username,
-    );
-    this.activeConnected.splice(indexOfConnectedUSer);
-    await client.join(client.id);
+    delete this.activeConnected[client.id];
   }
 }

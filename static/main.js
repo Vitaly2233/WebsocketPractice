@@ -182,8 +182,7 @@ const test = new Vue({
       // this.socket.on('newError', (data) => {
       //   console.log(data);
       // });
-      // this.socket.emit('test2');
-      this.socket.disconnect();
+      this.socket.emit('test2');
     },
   },
 });

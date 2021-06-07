@@ -13,7 +13,7 @@ import { RoomDocument } from 'src/chat-interface/schema/room.schema';
 import { getCookieValueByName } from 'src/helpers/get-cookie-value';
 
 @Injectable()
-export class CookieParserInterceptor implements NestInterceptor {
+export class OtherInterceptor implements NestInterceptor {
   constructor(
     @InjectModel('room') private roomModel: Model<RoomDocument>,
     private jwtService: JwtService,
@@ -24,17 +24,7 @@ export class CookieParserInterceptor implements NestInterceptor {
     next: CallHandler,
   ): Promise<Observable<any>> {
     const client: ISocketClient = context?.switchToWs()?.getClient();
-    console.log('here');
 
-    client.userData = {};
-    const cookie = client?.handshake?.headers?.cookie;
-    const roomId = getCookieValueByName(cookie, 'currentRoom');
-    const token = getCookieValueByName(cookie, 'token');
-    // const room: RoomDocument | undefined = await this.roomModel?.findById(
-    //   roomId,
-    // );
-    client.userData.token = token;
-    client.userData.token = 'dfsfsds';
     return next.handle();
   }
 }
