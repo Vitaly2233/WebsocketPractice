@@ -16,10 +16,10 @@ import { TokenGuard } from 'src/guards/token.guard';
 import { MessageService } from './message.service';
 import { CookieParserInterceptor } from './interceptor/cookie-parser.interceptor';
 import { ExceptionInterceptor } from './interceptor/exception.interceptor';
-import { IActiveConnected } from 'src/chat-interface/interface/active-connected.interface';
 import { ConnectionService } from 'src/chat-interface/connection.service';
 import { MessageFrontend } from './interface/message-frontend';
-import { User } from 'src/auth/Schema/user.schema';
+import { User, UserDocument } from 'src/auth/Schema/user.schema';
+import { IActiveConnected } from 'src/chat-interface/interface/active-connected.interface';
 
 @WebSocketGateway()
 @UseGuards(TokenGuard)
@@ -30,6 +30,7 @@ export class MessageGateway {
     private connetionService: ConnectionService,
     @InjectModel('message') private messageModel: Model<MessageDocument>,
     @InjectModel('room') private roomModel: Model<RoomDocument>,
+    @InjectModel('user') private userModel: Model<UserDocument>,
   ) {}
 
   @WebSocketServer() server: ISocketClient;
@@ -48,13 +49,30 @@ export class MessageGateway {
     const messageFronted: MessageFrontend =
       await this.messageService.sendMessage(client, text);
 
+    const roomPopulatedOffline = await client.userData.room
+      .populate('offline')
+      .execPopulate();
     const roomPopulatedOnline = await client.userData.room
       .populate('online')
       .execPopulate();
-    roomPopulatedOnline.online.forEach((onlineUser: User) => {
-      const userSocketId = getKeyByValue(onlineUser, onlineUser._id);
-      if (!userSocketId) return;
-      this.server.to(userSocketId).emit('getNewMessage', messageFronted);
+
+    roomPopulatedOffline.offline.forEach(async (offlineUSer: User) => {
+      try {
+        await this.userModel.findByIdAndUpdate(offlineUSer._id, {
+          $inc: { ['unread.$.' + client.userData.room._id]: 1 },
+        });
+      } catch (e) {
+        return;
+      }
+    });
+
+    const activeConnected: IActiveConnected =
+      this.connetionService.getActiveConnected();
+
+    roomPopulatedOnline.online.forEach(async (onlineUser: User) => {
+      const userSocketId = getKeyByValue(activeConnected, onlineUser._id);
+      if (!userSocketId)
+        this.server.to(userSocketId).emit('newMessage', messageFronted);
     });
   }
 

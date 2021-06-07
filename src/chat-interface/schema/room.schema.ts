@@ -36,6 +36,14 @@ export class Room {
   online: mongoose.PopulatedDoc<User | mongoose.Schema.Types.ObjectId>[];
 
   @Prop({
+    default: [],
+    type: [{ type: mongoose.Schema.Types.ObjectId }],
+    required: true,
+    ref: 'user',
+  })
+  offline: mongoose.PopulatedDoc<User | mongoose.Schema.Types.ObjectId>[];
+
+  @Prop({
     type: [{ type: mongoose.Schema.Types.ObjectId }],
     ref: 'message',
     default: [],

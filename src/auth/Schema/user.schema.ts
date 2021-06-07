@@ -28,12 +28,7 @@ export class User {
   rooms: mongoose.PopulatedDoc<Room | mongoose.ObjectId>[];
 
   @Prop()
-  unread: [
-    {
-      roomId: string;
-      counter: number;
-    },
-  ];
+  unread: mongoose.PopulatedDoc<mongoose.ObjectId | mongoose.Number>[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
