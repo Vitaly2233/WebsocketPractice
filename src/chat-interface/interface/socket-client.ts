@@ -15,7 +15,8 @@ export interface ISocketClient {
   join(value: string): Promise<void>;
 
   rooms: any;
+
   emit(message: string, data: any): any;
 
-  to(sendToWhom: string): any;
+  to(sendToWhom: string): ISocketClient;
 }

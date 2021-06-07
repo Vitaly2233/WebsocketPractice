@@ -20,7 +20,7 @@ export class MessageService {
     @ConnectedSocket() client: ISocketClient,
     roomId: string,
   ): Promise<boolean> {
-    const room: RoomDocument = await this.roomModel.findById(roomId);
+    const room: RoomDocument = client.userData.room;
     const populatedRoomsParticipants: RoomDocument = await room
       .populate('participants')
       .execPopulate();
@@ -32,11 +32,11 @@ export class MessageService {
     );
     if (!isParticipant.includes(true))
       throw new WsException("you're not into the room");
-
-    const messages: MessageFrontend[] = [];
     const populatedRoomsMessages: RoomDocument = await room
       .populate('messages')
       .execPopulate();
+
+    const messages: MessageFrontend[] = [];
     populatedRoomsMessages.messages.forEach((message: MessageDocument) => {
       messages.push({ username: message.username, text: message.text });
     });
@@ -53,14 +53,17 @@ export class MessageService {
       room: client.userData.room._id,
     });
 
+    await this.roomModel.findByIdAndUpdate(client.userData.room._id, {
+      $addToSet: { messages: newMessage._id },
+    });
+
     const MessageFrontend: MessageFrontend = {
       text: newMessage.text,
       username: newMessage.username,
     };
-    await this.roomModel.findByIdAndUpdate(client.userData.room._id, {
-      $addToSet: { messages: newMessage._id },
-    });
     await newMessage.save();
     return MessageFrontend;
   }
+
+  async getUseread(client: ISocketClient) {}
 }

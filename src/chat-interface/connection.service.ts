@@ -3,20 +3,20 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { WsException } from '@nestjs/websockets';
 import { Model, ObjectId } from 'mongoose';
-import { User, UserDocument } from 'src/auth/Schema/user.schema';
+import { UserDocument } from 'src/auth/Schema/user.schema';
 import { getCookieValueByName } from 'src/helpers/get-cookie-value';
 import { MessageService } from 'src/messages/message.service';
+import { IActiveConnected } from './interface/active-connected.interface';
 import { ISocketClient } from './interface/socket-client';
 import { ITokenData } from './interface/token-data';
 import { Room, RoomDocument } from './schema/room.schema';
 
 @Injectable()
 export class ConnectionService {
-  private activeConnected: Record<string, ObjectId> = {};
+  private activeConnected: IActiveConnected;
 
   constructor(
     private jwtService: JwtService,
-    private messsageService: MessageService,
     @InjectModel('user') private userModel: Model<UserDocument>,
     @InjectModel('room') private roomModel: Model<RoomDocument>,
   ) {}
@@ -31,7 +31,6 @@ export class ConnectionService {
     if (!cookie)
       return client.emit('newError', { message: 'cookie is missing' });
     const token: string | undefined = getCookieValueByName(cookie, 'token');
-    const currentRoomId: string = getCookieValueByName(cookie, 'currentRoom');
 
     // validating a token
     let verifiedData: ITokenData;
@@ -44,14 +43,14 @@ export class ConnectionService {
     if (!username)
       return client.emit('newError', { message: 'cookie is missing' });
 
-    const user = await this.userModel.findOne({ username: username });
-    if (!user) return client.emit('newError', { message: 'user is not found' });
-    this.activeConnected[client.id] = user._id;
-    // if user is already connecteed to this room, add checking if he's in the room
-    if (currentRoomId) {
-      if (!this.messsageService.getAllMessages(client, currentRoomId))
-        return client.emit('newError', { message: "you're not into the room" });
+    let user: UserDocument;
+    try {
+      user = await this.userModel.findOne({ username: username });
+    } catch (e) {
+      return client.emit('newError', { message: 'user is not found' });
     }
+    this.activeConnected.push({ [client.id]: user._id });
+    console.log(this.activeConnected);
 
     // return to user his chats with participant usernames and ids of this chats
     const sendUserRooms: Record<string, ObjectId> = {};
