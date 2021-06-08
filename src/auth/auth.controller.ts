@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { JwtTokenDto } from './dto/token.dto';
-import { RemovePasswordInterceptor } from './remove-password.interceptor';
+import { RemovePasswordInterceptor } from './interceptor/remove-password.interceptor';
 import { User, UserDocument } from './Schema/user.schema';
 
 @Controller('auth')

@@ -35,10 +35,15 @@ export class MessageGateway {
 
   @WebSocketServer() server: ISocketClient;
 
+  @SubscribeMessage('getUSerChats')
+  async getUSerChats(@ConnectedSocket() client: ISocketClient) {
+    const chats = this.messageService.getUserChats(client);
+    console.log(chats);
+  }
+
   @SubscribeMessage('getAllMessagesInRoom')
   async getAllMessagesInRoom(@ConnectedSocket() client: ISocketClient) {
-    const roomId = client.userData.room._id;
-    return this.messageService.getAllMessages(client, roomId);
+    return this.messageService.getAllMessages(client);
   }
 
   @SubscribeMessage('sendMessage')
@@ -47,7 +52,7 @@ export class MessageGateway {
     @MessageBody() text: string,
   ) {
     const messageFronted: MessageFrontend =
-      await this.messageService.sendMessage(client, text);
+      await this.messageService.saveMessage(client, text);
 
     const roomPopulatedOffline = await client.userData.room
       .populate('offline')

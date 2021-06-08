@@ -1,9 +1,10 @@
+import { UserDocument } from 'src/auth/Schema/user.schema';
 import { RoomDocument } from '../schema/room.schema';
 
 export interface ISocketClient {
   userData: {
     room?: RoomDocument;
-    username?: string;
+    user?: UserDocument;
     token?: string;
   };
   handshake?: {
@@ -19,4 +20,6 @@ export interface ISocketClient {
   emit(message: string, data: any): any;
 
   to(sendToWhom: string): ISocketClient;
+
+  disconnect(): any;
 }

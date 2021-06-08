@@ -16,7 +16,6 @@ export class RemovePasswordInterceptor implements NestInterceptor {
     return next.handle().pipe(
       map((data) => {
         data.password = null;
-        console.log(data);
         return data;
       }),
     );
