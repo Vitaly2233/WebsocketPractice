@@ -2,4 +2,8 @@ import { ObjectId } from 'mongoose';
 
 type socketId = string;
 
-export type IActiveConnected = Record<socketId, ObjectId>[];
+// type OWnRecord<K extends keyof any, T> = {
+//   [P in K]: T;
+// };
+
+// export type IActiveConnected = OWnRecord<ObjectId, socketId>[];

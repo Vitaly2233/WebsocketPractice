@@ -12,7 +12,7 @@ export class User {
     type: mongoose.Types.ObjectId,
     default: new mongoose.Types.ObjectId(),
   })
-  _id: mongoose.ObjectId;
+  _id: mongoose.ObjectId | string;
 
   @IsString()
   @Length(4, 16)
@@ -32,7 +32,7 @@ export class User {
   rooms: mongoose.PopulatedDoc<Room | mongoose.ObjectId>[];
 
   @Prop()
-  unread: mongoose.PopulatedDoc<mongoose.ObjectId | mongoose.Number>[];
+  unread: number;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

@@ -25,15 +25,12 @@ export class CookieParserInterceptor implements NestInterceptor {
     next: CallHandler,
   ): Promise<Observable<any>> {
     const client: ISocketClient = context?.switchToWs()?.getClient();
-    client.userData = {};
     const cookie = client?.handshake?.headers?.cookie;
     const roomId = getCookieValueByName(cookie, 'currentRoom');
-    const token = client.userData.token;
     let room: RoomDocument;
     try {
       room = await this.roomModel.findById(roomId);
     } catch (e) {}
-    client.userData.token = token;
     client.userData.room = room;
 
     return next.handle();

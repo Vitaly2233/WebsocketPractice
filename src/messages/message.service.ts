@@ -18,23 +18,30 @@ export class MessageService {
     @InjectModel('user') private userModel: Model<UserDocument>,
   ) {}
 
-  async getUserChats(
+  async getUserRooms(
     @ConnectedSocket() client: ISocketClient,
-  ): Promise<Record<RoomName, ObjectId>> {
+  ): Promise<Record<RoomName, { id: ObjectId; unread: number }>> {
     const username: string = client.userData.user.username;
     // return to user his chats with participant usernames and ids of this chats
-    const sendUserRooms: Record<RoomName, ObjectId> = {};
+    const sendUserRooms: Record<RoomName, { id: ObjectId; unread: number }> =
+      {};
     const userRoomsPopulated: UserDocument = await (
       await this.userModel.findOne({ username: username }).populate('rooms')
     ).execPopulate();
     const userRooms = userRoomsPopulated.rooms;
-    userRooms.forEach((userRoom: Room) => {
-      sendUserRooms[userRoom.roomName] = userRoom._id;
+    userRooms.forEach(async (userRoom: Room) => {
+      sendUserRooms[userRoom.roomName].unread = await this.getUserUnread(
+        client.userData.user._id,
+      );
+      sendUserRooms[userRoom.roomName].id = userRoom._id;
     });
 
     return sendUserRooms;
+  }
 
-    client.emit('getUserRooms', userRooms);
+  async getUserUnread(userId: ObjectId): Promise<number> {
+    const user: UserDocument = await this.userModel.findById(userId);
+    return user.unread;
   }
 
   async getAllMessages(

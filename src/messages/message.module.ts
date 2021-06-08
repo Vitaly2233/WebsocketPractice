@@ -12,14 +12,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { TokenGuard } from 'src/messages/message.token.guard';
 
 @Module({
-  providers: [
-    MessageGateway,
-    MessageService,
-    {
-      provide: APP_GUARD,
-      useClass: TokenGuard,
-    },
-  ],
+  providers: [MessageGateway, MessageService],
   imports: [
     MongooseModule.forFeature([
       { name: 'message', schema: MessageSchema },

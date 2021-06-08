@@ -32,7 +32,6 @@ const auth = new Vue({
         return (this.status = 'invalid username or password');
       }
       const token = await response.json();
-      console.log(token);
       if (token.statusCode === 404) return this.status('user is not found');
       document.cookie = 'token=' + token.access_token;
       interface.setInterface();
@@ -77,17 +76,15 @@ const interface = new Vue({
 
     async getChats() {
       this.socket = await io('http://localhost:8080/');
-      console.log(this.socket);
-      console.log(this.socket.connected);
       // if (!this.socket.connected) {
       //   auth.setAuth();
       //   return (auth.status =
       //     "can't open the chat, you're probably not authorized");
       // }
 
-      this.socket.emit('getUSerChats');
-      this.socket.on('getUSerChats', (data) => {
-        console.log(data);
+      this.socket.emit('getUserRooms');
+      this.socket.on('getUserRooms', (data) => {
+        console.log('getChatsData ----', data);
       });
       this.socket.on('newError', (data) => {
         console.log(data);

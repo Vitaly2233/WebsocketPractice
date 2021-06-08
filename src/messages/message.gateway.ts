@@ -19,8 +19,7 @@ import { ExceptionInterceptor } from './interceptor/exception.interceptor';
 import { ConnectionService } from 'src/chat-interface/connection.service';
 import { MessageFrontend } from './interface/message-frontend';
 import { User, UserDocument } from 'src/auth/Schema/user.schema';
-import { IActiveConnected } from 'src/chat-interface/interface/active-connected.interface';
-import { JwtService } from '@nestjs/jwt';
+// import { IActiveConnected } from 'src/chat-interface/interface/active-connected.interface';
 
 @WebSocketGateway()
 @UseGuards(TokenGuard)
@@ -36,16 +35,16 @@ export class MessageGateway {
 
   @WebSocketServer() server: ISocketClient;
 
-  @SubscribeMessage('getUSerChats')
-  async getUSerChats(@ConnectedSocket() client: ISocketClient) {
-    console.log(client.userData.user);
-
-    // const chats = await this.messageService.getUserChats(client);
-    // console.log(chats);
+  @SubscribeMessage('getUserRooms')
+  async getUserRooms(@ConnectedSocket() client: ISocketClient) {
+    const chats = await this.messageService.getUserRooms(client);
+    return client.emit('getUserRooms', chats);
   }
 
   @SubscribeMessage('getAllMessagesInRoom')
   async getAllMessagesInRoom(@ConnectedSocket() client: ISocketClient) {
+    console.log('get all messages is called');
+
     return this.messageService.getAllMessages(client);
   }
 
@@ -74,13 +73,12 @@ export class MessageGateway {
       }
     });
 
-    const activeConnected: IActiveConnected =
-      this.connetionService.getActiveConnected();
-
+    //IActiveConnected
+    const activeConnected = this.connetionService.getActiveConnected();
     roomPopulatedOnline.online.forEach(async (onlineUser: User) => {
-      const userSocketId = getKeyByValue(activeConnected, onlineUser._id);
-      if (!userSocketId)
-        this.server.to(userSocketId).emit('newMessage', messageFronted);
+      this.server
+        .to(activeConnected[onlineUser._id as string])
+        .emit('newMessage', messageFronted);
     });
   }
 
