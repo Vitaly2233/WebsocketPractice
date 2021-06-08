@@ -11,18 +11,7 @@ import { UserSchema } from './Schema/user.schema';
   controllers: [AuthController],
   imports: [
     MongooseModule.forRoot('mongodb://localhost/nest'),
-    MongooseModule.forFeatureAsync([
-      {
-        name: 'user',
-        useFactory: () => {
-          const schema = UserSchema;
-          schema.pre('save', function () {
-            console.log('saved user data');
-          });
-          return schema;
-        },
-      },
-    ]),
+    MongooseModule.forFeature([{ name: 'user', schema: UserSchema }]),
     JwtModule.register({
       secret: secretValue,
       signOptions: { expiresIn: '1d' },

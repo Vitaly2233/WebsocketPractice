@@ -7,7 +7,11 @@ export type UserDocument = User & mongoose.Document;
 
 @Schema()
 export class User {
-  @Prop({ unique: true, type: mongoose.Types.ObjectId })
+  @Prop({
+    unique: true,
+    type: mongoose.Types.ObjectId,
+    default: new mongoose.Types.ObjectId(),
+  })
   _id: mongoose.ObjectId;
 
   @IsString()

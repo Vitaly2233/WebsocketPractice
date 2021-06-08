@@ -16,9 +16,12 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('registration')
-  register(@Body() body: User): Promise<UserDocument> {
+  register(
+    @Body() body: { username: string; password: string },
+  ): Promise<UserDocument> {
     return this.authService.register(body);
   }
+
   @Post('login')
   login(@Body() body: User): Promise<JwtTokenDto | HttpException> {
     return this.authService.login(body);

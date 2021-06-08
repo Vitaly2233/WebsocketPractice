@@ -15,8 +15,11 @@ export class TokenGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<any> {
-    const client: ISocketClient = context.switchToHttp().getRequest();
-    const cookie = client.handshake.headers.cookie;
+    const client = await context.switchToWs().getClient();
+    client.userData = {};
+    const cookie = client.handshake?.headers?.cookie;
+    console.log(client.handshake);
+
     const token: string = getCookieValueByName(cookie, 'token');
     let verifiedData: ITokenData;
     try {
@@ -28,6 +31,7 @@ export class TokenGuard implements CanActivate {
       client.userData.user = await this.userModel.findOne({
         username: verifiedData.username,
       });
+      console.log(client.userData.user);
     } catch (e) {
       client.emit('newError', { message: 'user does not exist' });
       return false;

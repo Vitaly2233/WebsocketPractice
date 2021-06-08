@@ -17,7 +17,7 @@ export class ChatInterfaceGateWay
   @WebSocketServer() server;
 
   async handleConnection(client: ISocketClient) {
-    return await this.connectionSevice.handleConnection(client);
+    // console.log(await this.connectionSevice.handleConnection(client));
   }
   async handleDisconnect(client: ISocketClient) {
     // return await this.connectionSevice.deleteActiveConnected(client);

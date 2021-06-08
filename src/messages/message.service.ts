@@ -8,6 +8,8 @@ import { Room, RoomDocument } from 'src/chat-interface/schema/room.schema';
 import { MessageFrontend } from './interface/message-frontend';
 import { MessageDocument } from './schema/message.schema';
 
+type RoomName = string;
+
 @Injectable()
 export class MessageService {
   constructor(
@@ -16,10 +18,12 @@ export class MessageService {
     @InjectModel('user') private userModel: Model<UserDocument>,
   ) {}
 
-  async getUserChats(@ConnectedSocket() client: ISocketClient) {
+  async getUserChats(
+    @ConnectedSocket() client: ISocketClient,
+  ): Promise<Record<RoomName, ObjectId>> {
     const username: string = client.userData.user.username;
     // return to user his chats with participant usernames and ids of this chats
-    const sendUserRooms: Record<string, ObjectId> = {};
+    const sendUserRooms: Record<RoomName, ObjectId> = {};
     const userRoomsPopulated: UserDocument = await (
       await this.userModel.findOne({ username: username }).populate('rooms')
     ).execPopulate();
@@ -28,7 +32,7 @@ export class MessageService {
       sendUserRooms[userRoom.roomName] = userRoom._id;
     });
 
-    return userRooms;
+    return sendUserRooms;
 
     client.emit('getUserRooms', userRooms);
   }

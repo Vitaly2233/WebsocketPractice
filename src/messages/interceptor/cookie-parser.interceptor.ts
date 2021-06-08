@@ -35,6 +35,7 @@ export class CookieParserInterceptor implements NestInterceptor {
     } catch (e) {}
     client.userData.token = token;
     client.userData.room = room;
+
     return next.handle();
   }
 }

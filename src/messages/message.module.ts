@@ -8,9 +8,18 @@ import { secretValue } from 'src/constants/jwt.constants';
 import { MessageService } from './message.service';
 import { UserSchema } from 'src/auth/Schema/user.schema';
 import { ChatInterfaceModule } from 'src/chat-interface/chat-interface.module';
+import { APP_GUARD } from '@nestjs/core';
+import { TokenGuard } from 'src/messages/message.token.guard';
 
 @Module({
-  providers: [MessageGateway, MessageService],
+  providers: [
+    MessageGateway,
+    MessageService,
+    {
+      provide: APP_GUARD,
+      useClass: TokenGuard,
+    },
+  ],
   imports: [
     MongooseModule.forFeature([
       { name: 'message', schema: MessageSchema },

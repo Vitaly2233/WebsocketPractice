@@ -6,6 +6,12 @@ const auth = new Vue({
     password: '',
   },
   methods: {
+    async setAuth() {
+      document.getElementById('auth').hidden = false;
+      document.getElementById('room').hidden = true;
+      document.getElementById('interface').hidden = true;
+    },
+
     async login() {
       const data = {
         username: this.username,
@@ -18,10 +24,15 @@ const auth = new Vue({
         },
         body: JSON.stringify(data),
       });
-      if (response.status == 404 || response.status == 400) {
+      if (
+        response.status == 404 ||
+        response.status == 400 ||
+        response.status == 403
+      ) {
         return (this.status = 'invalid username or password');
       }
       const token = await response.json();
+      console.log(token);
       if (token.statusCode === 404) return this.status('user is not found');
       document.cookie = 'token=' + token.access_token;
       interface.setInterface();
@@ -66,12 +77,21 @@ const interface = new Vue({
 
     async getChats() {
       this.socket = await io('http://localhost:8080/');
-      if (!this.socket.connected)
-        return (interface.status =
-          "can't open the chat, you're probably not authorized");
+      console.log(this.socket);
+      console.log(this.socket.connected);
+      // if (!this.socket.connected) {
+      //   auth.setAuth();
+      //   return (auth.status =
+      //     "can't open the chat, you're probably not authorized");
+      // }
 
-      const chats = await this.socket.emit('getUSerChats');
-      console.log(chats);
+      this.socket.emit('getUSerChats');
+      this.socket.on('getUSerChats', (data) => {
+        console.log(data);
+      });
+      this.socket.on('newError', (data) => {
+        console.log(data);
+      });
       // Object.entries(chats).map((chats) => {
       //   const roomId = chats[0];
       //   $('#chats').empty();
@@ -106,8 +126,8 @@ const interface = new Vue({
   },
 });
 
-// const chat = new Vue({
-//   el: '#chat',
+// const room = new Vue({
+//   el: '#room',
 //   data: {
 //     name: '',
 //     text: '',
@@ -123,7 +143,7 @@ const interface = new Vue({
 //         button.hidden = true;
 //       }
 //       document.getElementById('interface').hidden = true;
-//       document.getElementById('chat').hidden = false;
+//       document.getElementById('room').hidden = false;
 //     },
 
 //     deleteAllMessages() {
@@ -170,19 +190,19 @@ const interface = new Vue({
 //   },
 // });
 
-const test = new Vue({
-  el: '#test',
-  data: {
-    socket: '',
-  },
-  methods: {
-    async testGettingImages() {
-      this.socket = await io('http://localhost:8080/');
-      if (!this.socket.connected) console.log('not connected');
-      this.socket.on('newError', (data) => {
-        console.log(data);
-      });
-      // this.socket.emit('test2');
-    },
-  },
-});
+// const test = new Vue({
+//   el: '#test',
+//   data: {
+//     socket: '',
+//   },
+//   methods: {
+//     async testGettingImages() {
+//       this.socket = await io('http://localhost:8080/');
+//       if (!this.socket.connected) console.log('not connected');
+//       this.socket.on('newError', (data) => {
+//         console.log(data);
+//       });
+//       // this.socket.emit('test2');
+//     },
+//   },
+// });

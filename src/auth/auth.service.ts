@@ -15,7 +15,7 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async register(payload: User) {
+  async register(payload: { username: string; password: string }) {
     const { username, password } = payload;
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser: UserDocument = new this.userModel({
@@ -30,13 +30,20 @@ export class AuthService {
     return newUser;
   }
 
-  async login(body: User): Promise<HttpException | JwtTokenDto> {
+  async login(body: {
+    username: string;
+    password: string;
+  }): Promise<HttpException | JwtTokenDto> {
     const { username, password } = body;
-    const user: UserDocument | null = await this.userModel.findOne({
-      username: username,
-    });
-    if (!user)
+    let user: UserDocument;
+    try {
+      user = await this.userModel.findOne({
+        username: username,
+      });
+    } catch (e) {
       throw new HttpException("invalid username, or user doesn't exist", 404);
+    }
+
     const isEqual: boolean = await bcrypt.compare(password, user.password);
     if (!isEqual) throw new HttpException('wrong password', 404);
     const tokenData: ITokenData = {
@@ -46,6 +53,7 @@ export class AuthService {
     const payload: JwtTokenDto = {
       access_token: token,
     };
+
     return payload;
   }
 }

@@ -12,7 +12,7 @@ import { MessageDocument } from './schema/message.schema';
 import { UseGuards, UseInterceptors } from '@nestjs/common';
 import { ISocketClient } from '../chat-interface/interface/socket-client';
 import { RoomDocument } from 'src/chat-interface/schema/room.schema';
-import { TokenGuard } from 'src/guards/token.guard';
+import { TokenGuard } from 'src/messages/message.token.guard';
 import { MessageService } from './message.service';
 import { CookieParserInterceptor } from './interceptor/cookie-parser.interceptor';
 import { ExceptionInterceptor } from './interceptor/exception.interceptor';
@@ -20,6 +20,7 @@ import { ConnectionService } from 'src/chat-interface/connection.service';
 import { MessageFrontend } from './interface/message-frontend';
 import { User, UserDocument } from 'src/auth/Schema/user.schema';
 import { IActiveConnected } from 'src/chat-interface/interface/active-connected.interface';
+import { JwtService } from '@nestjs/jwt';
 
 @WebSocketGateway()
 @UseGuards(TokenGuard)
@@ -37,8 +38,10 @@ export class MessageGateway {
 
   @SubscribeMessage('getUSerChats')
   async getUSerChats(@ConnectedSocket() client: ISocketClient) {
-    const chats = this.messageService.getUserChats(client);
-    console.log(chats);
+    console.log(client.userData.user);
+
+    // const chats = await this.messageService.getUserChats(client);
+    // console.log(chats);
   }
 
   @SubscribeMessage('getAllMessagesInRoom')
