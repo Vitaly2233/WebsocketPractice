@@ -35,12 +35,6 @@ export class MessageGateway {
 
   @WebSocketServer() server: ISocketClient;
 
-  @SubscribeMessage('getUserRooms')
-  async getUserRooms(@ConnectedSocket() client: ISocketClient) {
-    const chats = await this.messageService.getUserRooms(client);
-    return client.emit('getUserRooms', chats);
-  }
-
   @SubscribeMessage('getAllMessagesInRoom')
   async getAllMessagesInRoom(@ConnectedSocket() client: ISocketClient) {
     console.log('get all messages is called');

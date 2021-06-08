@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { ConnectedSocket, WsException } from '@nestjs/websockets';
-import { Model, ObjectId } from 'mongoose';
-import { User, UserDocument } from 'src/auth/Schema/user.schema';
+import { Model, Mongoose, ObjectId } from 'mongoose';
+import * as mongoose from 'mongoose';
+import { UnreadMessage, User, UserDocument } from 'src/auth/Schema/user.schema';
 import { ISocketClient } from 'src/chat-interface/interface/socket-client';
 import { Room, RoomDocument } from 'src/chat-interface/schema/room.schema';
 import { MessageFrontend } from './interface/message-frontend';
@@ -32,16 +33,12 @@ export class MessageService {
     userRooms.forEach(async (userRoom: Room) => {
       sendUserRooms[userRoom.roomName].unread = await this.getUserUnread(
         client.userData.user._id,
+        userRoom._id,
       );
-      sendUserRooms[userRoom.roomName].id = userRoom._id;
+      sendUserRooms[userRoom.roomName].id = userRoom._id as ObjectId;
     });
 
     return sendUserRooms;
-  }
-
-  async getUserUnread(userId: ObjectId): Promise<number> {
-    const user: UserDocument = await this.userModel.findById(userId);
-    return user.unread;
   }
 
   async getAllMessages(
@@ -92,7 +89,14 @@ export class MessageService {
     return MessageFrontend;
   }
 
-  async getNewUserUnread(client: ISocketClient, username: string) {
-    const user: UserDocument = client.userData.user;
+  async getUserUnread(
+    userId: ObjectId,
+    roomId: mongoose.ObjectId | string,
+  ): Promise<number> {
+    const user: UserDocument = await this.userModel.findById(userId);
+    for (const message of user.unread) {
+      if (message.id == roomId) return message.count;
+    }
+    return 0;
   }
 }

@@ -10,7 +10,7 @@ export class Room {
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
   })
-  _id: mongoose.Schema.Types.ObjectId;
+  _id: mongoose.Schema.Types.ObjectId | string;
 
   @Prop({
     type: mongoose.Schema.Types.String,

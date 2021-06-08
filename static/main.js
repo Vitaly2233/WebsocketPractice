@@ -75,20 +75,19 @@ const interface = new Vue({
     },
 
     async getChats() {
-      this.socket = await io('http://localhost:8080/');
+      // this.socket = await io('http://localhost:8080/');
       // if (!this.socket.connected) {
       //   auth.setAuth();
       //   return (auth.status =
       //     "can't open the chat, you're probably not authorized");
       // }
-
-      this.socket.emit('getUserRooms');
-      this.socket.on('getUserRooms', (data) => {
-        console.log('getChatsData ----', data);
-      });
-      this.socket.on('newError', (data) => {
-        console.log(data);
-      });
+      // this.socket.emit('getUserRooms');
+      // this.socket.on('getUserRooms', (data) => {
+      //   console.log('getChatsData ----', data);
+      // });
+      // this.socket.on('newError', (data) => {
+      //   console.log(data);
+      // });
       // Object.entries(chats).map((chats) => {
       //   const roomId = chats[0];
       //   $('#chats').empty();
@@ -187,19 +186,16 @@ const interface = new Vue({
 //   },
 // });
 
-// const test = new Vue({
-//   el: '#test',
-//   data: {
-//     socket: '',
-//   },
-//   methods: {
-//     async testGettingImages() {
-//       this.socket = await io('http://localhost:8080/');
-//       if (!this.socket.connected) console.log('not connected');
-//       this.socket.on('newError', (data) => {
-//         console.log(data);
-//       });
-//       // this.socket.emit('test2');
-//     },
-//   },
-// });
+const test = new Vue({
+  el: '#test',
+  data: {
+    socket: '',
+  },
+  methods: {
+    async testGettingImages() {
+      this.socket = await io('http://localhost:8080/');
+      // this.socket.emit('');
+      // this.socket.emit('test2');
+    },
+  },
+});

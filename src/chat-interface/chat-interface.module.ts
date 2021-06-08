@@ -4,7 +4,6 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { UserSchema } from 'src/auth/Schema/user.schema';
 import { secretValue } from 'src/constants/jwt.constants';
 import { MessageModule } from 'src/messages/message.module';
-import { MessageService } from 'src/messages/message.service';
 import { ChatInterfaceGateWay } from './chat-interface.gateway';
 import { ConnectionService } from './connection.service';
 import { RoomSchema } from './schema/room.schema';
@@ -19,6 +18,7 @@ import { RoomSchema } from './schema/room.schema';
       secret: secretValue,
       signOptions: { expiresIn: '1d' },
     }),
+    MessageModule,
   ],
   providers: [ConnectionService, ChatInterfaceGateWay],
   exports: [ConnectionService],

@@ -4,6 +4,7 @@ import * as mongoose from 'mongoose';
 import { Room } from 'src/chat-interface/schema/room.schema';
 
 export type UserDocument = User & mongoose.Document;
+export type UnreadMessage = { id: string; count: number };
 
 @Schema()
 export class User {
@@ -32,7 +33,7 @@ export class User {
   rooms: mongoose.PopulatedDoc<Room | mongoose.ObjectId>[];
 
   @Prop()
-  unread: number;
+  unread: UnreadMessage[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

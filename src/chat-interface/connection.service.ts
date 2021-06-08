@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, ObjectId } from 'mongoose';
-import { User, UserDocument } from 'src/auth/Schema/user.schema';
+import { UnreadMessage, User, UserDocument } from 'src/auth/Schema/user.schema';
 import { getCookieValueByName } from 'src/helpers/get-cookie-value';
 // import { IActiveConnected } from './interface/active-connected.interface';
 import { ISocketClient } from './interface/socket-client';
@@ -75,11 +75,20 @@ export class ConnectionService {
       this.activeConnected.forEach((connectedUser) => {
         if (connectedUser[user._id]) {
           const index = this.activeConnected.indexOf(connectedUser[user._id]);
+          console.log(index);
           this.activeConnected.splice(index + 1);
         }
       });
     } catch (e) {}
 
     console.log(this.activeConnected);
+  }
+
+  async connectToTheRoom(client: ISocketClient, room: Room) {
+    const allUnread: UnreadMessage[] = client.userData.user.unread;
+    for (const unreadMessage of allUnread) {
+      if (unreadMessage.id == room._id) {
+      }
+    }
   }
 }
