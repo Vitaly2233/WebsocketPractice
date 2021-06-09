@@ -11,7 +11,7 @@ import { Model } from 'mongoose';
 import { MessageDocument } from './schema/message.schema';
 import { UseGuards, UseInterceptors } from '@nestjs/common';
 import { ISocketClient } from '../chat-interface/interface/socket-client';
-import { RoomDocument } from 'src/chat-interface/schema/room.schema';
+import { isOnline, RoomDocument } from 'src/chat-interface/schema/room.schema';
 import { TokenGuard } from 'src/messages/message.token.guard';
 import { MessageService } from './message.service';
 import { CookieParserInterceptor } from './interceptor/cookie-parser.interceptor';
@@ -50,29 +50,21 @@ export class MessageGateway {
     const messageFronted: MessageFrontend =
       await this.messageService.saveMessage(client, text);
 
-    const roomPopulatedOffline = await client.userData.room
-      .populate('offline')
-      .execPopulate();
     const roomPopulatedOnline = await client.userData.room
       .populate('online')
       .execPopulate();
 
-    roomPopulatedOffline.offline.forEach(async (offlineUSer: User) => {
-      try {
-        await this.userModel.findByIdAndUpdate(offlineUSer._id, {
+    const activeConnected = this.connetionService.getActiveConnected();
+    roomPopulatedOnline.isOnline.forEach(async (isOnline: isOnline) => {
+      if (isOnline.user) {
+        this.server
+          .to(activeConnected[isOnline.user as string])
+          .emit('newMessage', messageFronted);
+      } else {
+        await this.userModel.findByIdAndUpdate(isOnline.user, {
           $inc: { ['unread.$.' + client.userData.room._id]: 1 },
         });
-      } catch (e) {
-        return;
       }
-    });
-
-    //IActiveConnected
-    const activeConnected = this.connetionService.getActiveConnected();
-    roomPopulatedOnline.online.forEach(async (onlineUser: User) => {
-      this.server
-        .to(activeConnected[onlineUser._id as string])
-        .emit('newMessage', messageFronted);
     });
   }
 

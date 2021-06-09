@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, ObjectId } from 'mongoose';
+import { WsException } from '@nestjs/websockets';
+import { Model, ObjectId, Schema } from 'mongoose';
 import { UnreadMessage, User, UserDocument } from 'src/auth/Schema/user.schema';
 import { getCookieValueByName } from 'src/helpers/get-cookie-value';
+import { MessageService } from 'src/messages/message.service';
 // import { IActiveConnected } from './interface/active-connected.interface';
 import { ISocketClient } from './interface/socket-client';
 import { ITokenData } from './interface/token-data';
@@ -16,8 +18,8 @@ export class ConnectionService {
 
   constructor(
     private jwtService: JwtService,
+    private messageSrvice: MessageService,
     @InjectModel('user') private userModel: Model<UserDocument>,
-    @InjectModel('room') private roomModel: Model<RoomDocument>,
   ) {}
 
   getActiveConnected() {
@@ -85,10 +87,50 @@ export class ConnectionService {
   }
 
   async connectToTheRoom(client: ISocketClient, room: Room) {
-    const allUnread: UnreadMessage[] = client.userData.user.unread;
+    const removedUnread = this.removeUserUnread(client.userData.user, room._id);
+    if (!removedUnread)
+      throw new WsException('user is not found to delete hiw unreads');
+
+    const changedStatus = await this.changeUserStatusInRoom(
+      client.userData.user._id,
+      client.userData.room,
+      true,
+    );
+    if (!changedStatus) throw new WsException('status is not changed');
+
+    await this.messageSrvice.getAllMessages(client);
+  }
+
+  async removeUserUnread(
+    user: UserDocument,
+    roomId: string | Schema.Types.ObjectId,
+  ): Promise<boolean> {
+    const allUnread = user.unread;
+    let index = 0;
     for (const unreadMessage of allUnread) {
-      if (unreadMessage.id == room._id) {
+      if (unreadMessage.id == roomId) {
+        allUnread.splice(index);
+        await user.save();
+        return true;
       }
+      index++;
     }
+    return false;
+  }
+
+  async changeUserStatusInRoom(
+    userId: string,
+    room: RoomDocument,
+    status: boolean,
+  ) {
+    let index = 0;
+    for (const participant of room.isOnline) {
+      if ((participant.user = userId)) {
+        room.isOnline[index].status = status;
+        return true;
+      }
+      index++;
+    }
+    return false;
   }
 }

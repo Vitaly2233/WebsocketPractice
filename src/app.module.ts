@@ -9,9 +9,9 @@ import { MessageModule } from './messages/message.module';
     MongooseModule.forRoot('mongodb://localhost/nest', {
       useCreateIndex: true,
     }),
-    MessageModule,
     AuthModule,
     ChatInterfaceModule,
+    MessageModule,
   ],
 })
 export class AppModule {}

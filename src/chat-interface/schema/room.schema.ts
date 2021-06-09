@@ -5,6 +5,11 @@ import { Message } from 'src/messages/schema/message.schema';
 
 export type RoomDocument = Room & mongoose.Document;
 
+export interface isOnline {
+  user: mongoose.PopulatedDoc<User | mongoose.Schema.Types.ObjectId | string>;
+  status: boolean;
+}
+
 @Schema()
 export class Room {
   @Prop({
@@ -29,19 +34,10 @@ export class Room {
 
   @Prop({
     default: [],
-    type: [{ type: mongoose.Schema.Types.ObjectId }],
     required: true,
     ref: 'user',
   })
-  online: mongoose.PopulatedDoc<User | mongoose.Schema.Types.ObjectId>[];
-
-  @Prop({
-    default: [],
-    type: [{ type: mongoose.Schema.Types.ObjectId }],
-    required: true,
-    ref: 'user',
-  })
-  offline: mongoose.PopulatedDoc<User | mongoose.Schema.Types.ObjectId>[];
+  isOnline: isOnline[];
 
   @Prop({
     type: [{ type: mongoose.Schema.Types.ObjectId }],
