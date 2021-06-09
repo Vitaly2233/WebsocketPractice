@@ -5,6 +5,7 @@ import { WsException } from '@nestjs/websockets';
 import { Model, ObjectId, Schema } from 'mongoose';
 import { UnreadMessage, User, UserDocument } from 'src/auth/Schema/user.schema';
 import { getCookieValueByName } from 'src/helpers/get-cookie-value';
+import { MessageFrontend } from 'src/messages/interface/message-frontend';
 import { MessageService } from 'src/messages/message.service';
 // import { IActiveConnected } from './interface/active-connected.interface';
 import { ISocketClient } from './interface/socket-client';
@@ -13,7 +14,7 @@ import { Room, RoomDocument } from './schema/room.schema';
 
 @Injectable()
 export class ConnectionService {
-  private activeConnected = [];
+  private activeConnected: Record<string, string>[] = [];
   // IActiveConnected
 
   constructor(
@@ -57,7 +58,18 @@ export class ConnectionService {
       client.emit('newError', { message: 'user is not found' });
       return client.disconnect();
     }
+
+    this.activeConnected = [
+      ...new Set(
+        this.activeConnected.map((x) => {
+          getKeyByValue(x, user._id);
+          return { [user._id]: x[user._id] };
+        }),
+      ),
+    ];
+
     this.activeConnected.push({ [user._id]: client.id });
+
     console.log(this.activeConnected);
   }
 
@@ -70,18 +82,18 @@ export class ConnectionService {
       verifiedData = await this.jwtService.verify(token);
     } catch (e) {}
     const { username } = verifiedData;
-    try {
-      const user: UserDocument = await this.userModel.findOne({
-        username: username,
-      });
-      this.activeConnected.forEach((connectedUser) => {
-        if (connectedUser[user._id]) {
-          const index = this.activeConnected.indexOf(connectedUser[user._id]);
-          console.log(index);
-          this.activeConnected.splice(index + 1);
-        }
-      });
-    } catch (e) {}
+    // try {
+    //   const user: UserDocument = await this.userModel.findOne({
+    //     username: username,
+    //   });
+    //   this.activeConnected.forEach((connectedUser) => {
+    //     if (connectedUser[user._id]) {
+    //       const index = this.activeConnected.indexOf(connectedUser[user._id]);
+    //       console.log(index);
+    //       this.activeConnected.splice(index + 1);
+    //     }
+    //   });
+    // } catch (e) {}
 
     console.log(this.activeConnected);
   }
@@ -98,7 +110,8 @@ export class ConnectionService {
     );
     if (!changedStatus) throw new WsException('status is not changed');
 
-    await this.messageSrvice.getAllMessages(client);
+    const messages = await this.messageSrvice.getAllMessages(client);
+    client.emit('getAllMessages', messages);
   }
 
   async removeUserUnread(
@@ -133,4 +146,8 @@ export class ConnectionService {
     }
     return false;
   }
+}
+
+function getKeyByValue(object, value) {
+  return Object.keys(object).find((key) => object[key] === value);
 }

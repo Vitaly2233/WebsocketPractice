@@ -194,8 +194,10 @@ const test = new Vue({
   methods: {
     async testGettingImages() {
       this.socket = await io('http://localhost:8080/');
-      // this.socket.emit('');
-      // this.socket.emit('test2');
+      this.socket.emmit('getUserRooms');
+      this.socket.on('getUserRooms', (data) => {
+        console.log('got all rooms: ', data);
+      });
     },
   },
 });

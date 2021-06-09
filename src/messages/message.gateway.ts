@@ -56,7 +56,7 @@ export class MessageGateway {
 
     const activeConnected = this.connetionService.getActiveConnected();
     roomPopulatedOnline.isOnline.forEach(async (isOnline: isOnline) => {
-      if (isOnline.user) {
+      if (isOnline.status) {
         this.server
           .to(activeConnected[isOnline.user as string])
           .emit('newMessage', messageFronted);
@@ -74,8 +74,4 @@ export class MessageGateway {
     // AAAAAAAAAAAAAAAAAAA FUCKING RETURN
     // return this.messageService.getAllMessages(client, 'sdf');
   }
-}
-
-function getKeyByValue(object, value) {
-  return Object.keys(object)?.find((key) => object[key] === value);
 }

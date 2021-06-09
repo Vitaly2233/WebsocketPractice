@@ -43,7 +43,7 @@ export class MessageService {
 
   async getAllMessages(
     @ConnectedSocket() client: ISocketClient,
-  ): Promise<boolean> {
+  ): Promise<MessageFrontend[] | WsException> {
     const room: RoomDocument = client.userData.room;
     const populatedRoomsParticipants: RoomDocument = await room
       .populate('participants')
@@ -64,7 +64,7 @@ export class MessageService {
     populatedRoomsMessages.messages.forEach((message: MessageDocument) => {
       messages.push({ username: message.username, text: message.text });
     });
-    return client.emit('getAllMessages', messages);
+    return messages;
   }
 
   async saveMessage(
