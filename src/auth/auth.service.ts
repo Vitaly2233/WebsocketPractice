@@ -6,7 +6,6 @@ import { User, UserDocument } from './Schema/user.schema';
 import { JwtService } from '@nestjs/jwt';
 import { JwtTokenDto } from './dto/token.dto';
 import { ITokenData } from 'src/chat-interface/interface/token-data';
-import { UserDataFrontendDto } from './dto/userDataFrontend.dto';
 
 @Injectable()
 export class AuthService {
@@ -22,11 +21,7 @@ export class AuthService {
       username: username,
       password: hashedPassword,
     });
-    try {
-      await newUser.save();
-    } catch (e) {
-      throw new HttpException('user with the username is already exists', 400);
-    }
+    await newUser.save();
     return newUser;
   }
 
