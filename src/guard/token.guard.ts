@@ -20,6 +20,8 @@ export class TokenGuard implements CanActivate {
     const cookie = client.handshake?.headers?.cookie;
     const token: string = getCookieValueByName(cookie, 'token');
     let verifiedData: ITokenData;
+    if (!token) console.log('here');
+
     try {
       verifiedData = await this.jwtService.verify(token);
     } catch (e) {

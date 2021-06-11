@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
+import { ObjectId } from 'bson';
 import { User } from 'src/auth/Schema/user.schema';
 import { Message } from 'src/messages/schema/message.schema';
 
@@ -14,6 +15,7 @@ export interface isOnline {
 export class Room {
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
+    default: new ObjectId(),
   })
   _id: mongoose.Schema.Types.ObjectId | string;
 

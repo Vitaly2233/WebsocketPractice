@@ -78,8 +78,7 @@ const interface = new Vue({
     },
 
     async getChats() {
-      this.socket.emit('getUserRooms');
-
+      // this.socket.emit('getUserRooms');
       // TO CREATE BUTTONS WITH ROOMS
       // Object.entries(chats).map((chats) => {
       //   const roomId = chats[0];
@@ -100,7 +99,7 @@ const interface = new Vue({
 
     async findUsers() {
       const users = this.usernames.split(' ');
-      this.socket.emit('createNewRoom', {
+      await this.socket.emit('createNewRoom', {
         participantUsernames: users,
         roomName: this.roomName,
       });
@@ -118,7 +117,7 @@ const interface = new Vue({
       });
 
       this.socket.on('createNewRoom', () => {
-        this.getChats;
+        this.getChats();
       });
     },
   },

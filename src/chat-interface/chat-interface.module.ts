@@ -7,6 +7,7 @@ import { MessageModule } from 'src/messages/message.module';
 import { ChatInterfaceGateWay } from './chat-interface.gateway';
 import { ConnectionService } from './connection.service';
 import { RoomSchema } from './schema/room.schema';
+import { ChatInterfaceService } from './chat-interface.service';
 
 @Module({
   imports: [
@@ -20,7 +21,7 @@ import { RoomSchema } from './schema/room.schema';
     }),
     forwardRef(() => MessageModule),
   ],
-  providers: [ConnectionService, ChatInterfaceGateWay],
+  providers: [ConnectionService, ChatInterfaceGateWay, ChatInterfaceService],
   exports: [ConnectionService],
 })
 export class ChatInterfaceModule {}

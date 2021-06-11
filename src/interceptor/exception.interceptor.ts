@@ -4,25 +4,14 @@ import {
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { InjectModel } from '@nestjs/mongoose';
 import { WsException } from '@nestjs/websockets';
-import { Model, Error } from 'mongoose';
+import { Error } from 'mongoose';
 import { Observable } from 'rxjs';
-import { catchError, map, tap } from 'rxjs/operators';
+import { catchError } from 'rxjs/operators';
 import { ISocketClient } from 'src/chat-interface/interface/socket-client';
-import { ITokenData } from 'src/chat-interface/interface/token-data';
-import { RoomDocument } from 'src/chat-interface/schema/room.schema';
-
-import { ArgumentsHost, Catch, ExceptionFilter } from '@nestjs/common';
 
 @Injectable()
 export class ExceptionInterceptor implements NestInterceptor {
-  constructor(
-    @InjectModel('room') private roomModel: Model<RoomDocument>,
-    private jwtService: JwtService,
-  ) {}
-
   async intercept(
     context: ExecutionContext,
     next: CallHandler,
@@ -30,8 +19,6 @@ export class ExceptionInterceptor implements NestInterceptor {
     const client: ISocketClient = context.switchToWs().getClient();
     return next.handle().pipe(
       catchError((error) => {
-        console.log(error);
-
         if (error instanceof Error)
           client.emit('newError', {
             status: 'error',
