@@ -1,24 +1,22 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { WsException } from '@nestjs/websockets';
-import { Model, ObjectId, Schema } from 'mongoose';
-import { UnreadMessage, User, UserDocument } from 'src/auth/Schema/user.schema';
+import { Model, Schema } from 'mongoose';
+import { UserDocument } from 'src/auth/Schema/user.schema';
 import { getCookieValueByName } from 'src/helpers/get-cookie-value';
-import { MessageFrontend } from 'src/messages/interface/message-frontend';
 import { MessageService } from 'src/messages/message.service';
-// import { IActiveConnected } from './interface/active-connected.interface';
 import { ISocketClient } from './interface/socket-client';
 import { ITokenData } from './interface/token-data';
 import { Room, RoomDocument } from './schema/room.schema';
 
 @Injectable()
 export class ConnectionService {
-  private activeConnected: Record<string, string>[] = [];
-  // IActiveConnected
+  private activeConnected = {};
 
   constructor(
     private jwtService: JwtService,
+    @Inject(forwardRef(() => MessageService))
     private messageSrvice: MessageService,
     @InjectModel('user') private userModel: Model<UserDocument>,
   ) {}
@@ -29,7 +27,6 @@ export class ConnectionService {
 
   async handleConnection(client: ISocketClient) {
     // check the valid of user data cookies etc...
-
     const cookie: string | undefined = client?.handshake?.headers?.cookie;
     if (!cookie) {
       client.emit('newError', { message: 'cookie is missing' });
@@ -58,19 +55,11 @@ export class ConnectionService {
       client.emit('newError', { message: 'user is not found' });
       return client.disconnect();
     }
-
-    this.activeConnected = [
-      ...new Set(
-        this.activeConnected.map((x) => {
-          getKeyByValue(x, user._id);
-          return { [user._id]: x[user._id] };
-        }),
-      ),
-    ];
-
-    this.activeConnected.push({ [user._id]: client.id });
-
-    console.log(this.activeConnected);
+    this.activeConnected[user._id] = client.id;
+    console.log(
+      'user is connected and new list is like: ',
+      this.activeConnected,
+    );
   }
 
   async deleteActiveConnected(client: ISocketClient) {
@@ -82,20 +71,16 @@ export class ConnectionService {
       verifiedData = await this.jwtService.verify(token);
     } catch (e) {}
     const { username } = verifiedData;
-    // try {
-    //   const user: UserDocument = await this.userModel.findOne({
-    //     username: username,
-    //   });
-    //   this.activeConnected.forEach((connectedUser) => {
-    //     if (connectedUser[user._id]) {
-    //       const index = this.activeConnected.indexOf(connectedUser[user._id]);
-    //       console.log(index);
-    //       this.activeConnected.splice(index + 1);
-    //     }
-    //   });
-    // } catch (e) {}
 
-    console.log(this.activeConnected);
+    const user: UserDocument = await this.userModel.findOne({
+      username: username,
+    });
+
+    delete this.activeConnected[user._id];
+    console.log(
+      'user is disconnected and connected list now is: ',
+      this.activeConnected,
+    );
   }
 
   async connectToTheRoom(client: ISocketClient, room: Room) {
@@ -146,8 +131,4 @@ export class ConnectionService {
     }
     return false;
   }
-}
-
-function getKeyByValue(object, value) {
-  return Object.keys(object).find((key) => object[key] === value);
 }

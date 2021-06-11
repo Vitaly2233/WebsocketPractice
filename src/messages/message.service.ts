@@ -1,6 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { ConnectedSocket, WsException } from '@nestjs/websockets';
+import {
+  ConnectedSocket,
+  WebSocketServer,
+  WsException,
+} from '@nestjs/websockets';
 import { Model, Mongoose, ObjectId } from 'mongoose';
 import * as mongoose from 'mongoose';
 import { UnreadMessage, User, UserDocument } from 'src/auth/Schema/user.schema';
@@ -8,6 +12,7 @@ import { ISocketClient } from 'src/chat-interface/interface/socket-client';
 import { Room, RoomDocument } from 'src/chat-interface/schema/room.schema';
 import { MessageFrontend } from './interface/message-frontend';
 import { MessageDocument } from './schema/message.schema';
+import { ConnectionService } from 'src/chat-interface/connection.service';
 
 type RoomName = string;
 
@@ -17,7 +22,11 @@ export class MessageService {
     @InjectModel('message') private messageModel: Model<MessageDocument>,
     @InjectModel('room') private roomModel: Model<RoomDocument>,
     @InjectModel('user') private userModel: Model<UserDocument>,
+    @Inject(forwardRef(() => ConnectionService))
+    private connectionService: ConnectionService,
   ) {}
+
+  @WebSocketServer() server: ISocketClient;
 
   async getUserRooms(
     @ConnectedSocket() client: ISocketClient,
@@ -39,6 +48,19 @@ export class MessageService {
     });
 
     return sendUserRooms;
+  }
+
+  async createNewRoom(user: UserDocument, participantUsernames: string[]) {
+    participantUsernames.push(user.username);
+    participantUsernames.forEach(async (participantUsername) => {
+      const participant: UserDocument = await this.userModel.findOne({
+        username: participantUsername,
+      });
+      const activeConnected = this.connectionService.getActiveConnected();
+
+      if (activeConnected[participant._id] != undefined)
+        this.server.to(activeConnected[participant._id]).emit('getUserRooms');
+    });
   }
 
   async getAllMessages(

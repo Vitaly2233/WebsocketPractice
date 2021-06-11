@@ -19,7 +19,6 @@ import { ExceptionInterceptor } from './interceptor/exception.interceptor';
 import { ConnectionService } from 'src/chat-interface/connection.service';
 import { MessageFrontend } from './interface/message-frontend';
 import { User, UserDocument } from 'src/auth/Schema/user.schema';
-// import { IActiveConnected } from 'src/chat-interface/interface/active-connected.interface';
 
 @WebSocketGateway()
 @UseGuards(TokenGuard)
@@ -34,6 +33,17 @@ export class MessageGateway {
   ) {}
 
   @WebSocketServer() server: ISocketClient;
+
+  @SubscribeMessage('createNewRoom')
+  async createNewRoom(
+    @ConnectedSocket() client: ISocketClient,
+    @MessageBody() participants: string[],
+  ) {
+    return this.messageService.createNewRoom(
+      client.userData.user,
+      participants,
+    );
+  }
 
   @SubscribeMessage('getAllMessagesInRoom')
   async getAllMessagesInRoom(@ConnectedSocket() client: ISocketClient) {

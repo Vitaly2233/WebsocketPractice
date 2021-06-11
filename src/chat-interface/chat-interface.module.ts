@@ -18,7 +18,7 @@ import { RoomSchema } from './schema/room.schema';
       secret: secretValue,
       signOptions: { expiresIn: '1d' },
     }),
-    MessageModule,
+    forwardRef(() => MessageModule),
   ],
   providers: [ConnectionService, ChatInterfaceGateWay],
   exports: [ConnectionService],

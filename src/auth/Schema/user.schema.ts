@@ -4,7 +4,6 @@ import { IsString, Length } from 'class-validator';
 import * as mongoose from 'mongoose';
 import { Room } from 'src/chat-interface/schema/room.schema';
 
-export type UserDocument = User & mongoose.Document;
 export type UnreadMessage = { id: string; count: number };
 
 @Schema()
@@ -36,5 +35,7 @@ export class User {
   @Prop()
   unread: UnreadMessage[];
 }
+
+export type UserDocument = User & mongoose.Document;
 
 export const UserSchema = SchemaFactory.createForClass(User);
