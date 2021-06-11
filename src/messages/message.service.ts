@@ -1,18 +1,16 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import {
-  ConnectedSocket,
-  WebSocketServer,
-  WsException,
-} from '@nestjs/websockets';
-import { Model, Mongoose, ObjectId } from 'mongoose';
+import { ConnectedSocket, WsException } from '@nestjs/websockets';
+import { Model, ObjectId } from 'mongoose';
 import * as mongoose from 'mongoose';
-import { UnreadMessage, User, UserDocument } from 'src/auth/Schema/user.schema';
+import { User, UserDocument } from 'src/auth/Schema/user.schema';
 import { ISocketClient } from 'src/chat-interface/interface/socket-client';
 import { Room, RoomDocument } from 'src/chat-interface/schema/room.schema';
-import { MessageFrontend } from './interface/message-frontend';
+import { IMessageFrontend } from './interface/message-frontend';
 import { MessageDocument } from './schema/message.schema';
 import { ConnectionService } from 'src/chat-interface/connection.service';
+import { MongooseHelpService } from 'src/mongoose-help/mongoose-help.service';
+import { ICreateRoomRes } from 'src/mongoose-help/interface/create-room.interface';
 
 type RoomName = string;
 
@@ -24,9 +22,8 @@ export class MessageService {
     @InjectModel('user') private userModel: Model<UserDocument>,
     @Inject(forwardRef(() => ConnectionService))
     private connectionService: ConnectionService,
+    private mongooseHelpService: MongooseHelpService,
   ) {}
-
-  @WebSocketServer() server: ISocketClient;
 
   async getUserRooms(
     @ConnectedSocket() client: ISocketClient,
@@ -50,22 +47,80 @@ export class MessageService {
     return sendUserRooms;
   }
 
-  async createNewRoom(user: UserDocument, participantUsernames: string[]) {
-    participantUsernames.push(user.username);
-    participantUsernames.forEach(async (participantUsername) => {
-      const participant: UserDocument = await this.userModel.findOne({
-        username: participantUsername,
-      });
-      const activeConnected = this.connectionService.getActiveConnected();
-
-      if (activeConnected[participant._id] != undefined)
-        this.server.to(activeConnected[participant._id]).emit('getUserRooms');
+  async createRoom(
+    roomName: string,
+    participantUsernames: string[],
+    server: ISocketClient,
+  ): Promise<ICreateRoomRes | boolean> {
+    const activeConnected = this.connectionService.getActiveConnected();
+    const newRoom = new this.roomModel({
+      roomName: roomName,
+      participants: [],
     });
+    const users = await Promise.all(
+      participantUsernames.map(async (participantUsername: string) => {
+        const user: UserDocument = await this.userModel.findOne({
+          username: participantUsername,
+        });
+        return user;
+      }),
+    );
+
+    if (users.includes(undefined) || users.length === 0) return false;
+
+    users.forEach((user: UserDocument) => {
+      newRoom.participants.push(user._id);
+      this.userModel.findByIdAndUpdate(user._id, {
+        $push: { rooms: newRoom._id },
+      });
+      server.to(activeConnected[user._id]).emit('getUserRooms');
+    });
+    await newRoom.save();
+    let resultOfMethod: ICreateRoomRes = {};
+    resultOfMethod = {
+      status: true,
+      newRoom: newRoom,
+      participantDocuments: users,
+    };
+    return resultOfMethod;
+  }
+
+  async saveMessage(
+    client: ISocketClient,
+    text: string,
+  ): Promise<IMessageFrontend> {
+    const newMessage = new this.messageModel({
+      username: client.userData.user.username,
+      text: text,
+      room: client.userData.room._id,
+    });
+
+    await this.roomModel.findByIdAndUpdate(client.userData.room._id, {
+      $addToSet: { messages: newMessage._id },
+    });
+
+    const IMessageFrontend: IMessageFrontend = {
+      text: newMessage.text,
+      username: newMessage.username,
+    };
+    await newMessage.save();
+    return IMessageFrontend;
+  }
+
+  async getUserUnread(
+    userId: ObjectId,
+    roomId: mongoose.ObjectId | string,
+  ): Promise<number> {
+    const user: UserDocument = await this.userModel.findById(userId);
+    for (const message of user.unread) {
+      if (message.id == roomId) return message.count;
+    }
+    return 0;
   }
 
   async getAllMessages(
     @ConnectedSocket() client: ISocketClient,
-  ): Promise<MessageFrontend[] | WsException> {
+  ): Promise<IMessageFrontend[] | WsException> {
     const room: RoomDocument = client.userData.room;
     const populatedRoomsParticipants: RoomDocument = await room
       .populate('participants')
@@ -82,43 +137,10 @@ export class MessageService {
       .populate('messages')
       .execPopulate();
 
-    const messages: MessageFrontend[] = [];
+    const messages: IMessageFrontend[] = [];
     populatedRoomsMessages.messages.forEach((message: MessageDocument) => {
       messages.push({ username: message.username, text: message.text });
     });
     return messages;
-  }
-
-  async saveMessage(
-    client: ISocketClient,
-    text: string,
-  ): Promise<MessageFrontend> {
-    const newMessage = new this.messageModel({
-      username: client.userData.user.username,
-      text: text,
-      room: client.userData.room._id,
-    });
-
-    await this.roomModel.findByIdAndUpdate(client.userData.room._id, {
-      $addToSet: { messages: newMessage._id },
-    });
-
-    const MessageFrontend: MessageFrontend = {
-      text: newMessage.text,
-      username: newMessage.username,
-    };
-    await newMessage.save();
-    return MessageFrontend;
-  }
-
-  async getUserUnread(
-    userId: ObjectId,
-    roomId: mongoose.ObjectId | string,
-  ): Promise<number> {
-    const user: UserDocument = await this.userModel.findById(userId);
-    for (const message of user.unread) {
-      if (message.id == roomId) return message.count;
-    }
-    return 0;
   }
 }

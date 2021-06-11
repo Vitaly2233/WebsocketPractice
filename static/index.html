@@ -22,6 +22,7 @@
         <h3> Hi, {{username}}, here is you'r chats </h3>
         <h6>if you want to add someone to have a chat with, just put there their usernames separately by space!</h6>
         <input type="text" v-model='usernames' placeholder="enter username">
+        <input type="text" v-model='roomName' placeholder="enter a room name">
         <button @click.prevent="findUsers">Find</button>
         <h2>{{status}}</h2>
     </div>

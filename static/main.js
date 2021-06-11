@@ -61,6 +61,7 @@ const interface = new Vue({
   el: '#interface',
   data: {
     usernames: '',
+    roomName: '',
     username: '',
     status: '',
     socket: '',
@@ -68,26 +69,18 @@ const interface = new Vue({
   methods: {
     async setInterface() {
       this.username = auth.username;
-      this.getChats();
+      this.socket = await io('http://localhost:8080/');
+      await this.getChats();
+      this.setInterfaceSockets();
       document.getElementById('auth').hidden = true;
       document.getElementById('room').hidden = true;
       document.getElementById('interface').hidden = false;
     },
 
     async getChats() {
-      // this.socket = await io('http://localhost:8080/');
-      // if (!this.socket.connected) {
-      //   auth.setAuth();
-      //   return (auth.status =
-      //     "can't open the chat, you're probably not authorized");
-      // }
-      // this.socket.emit('getUserRooms');
-      // this.socket.on('getUserRooms', (data) => {
-      //   console.log('getChatsData ----', data);
-      // });
-      // this.socket.on('newError', (data) => {
-      //   console.log(data);
-      // });
+      this.socket.emit('getUserRooms');
+
+      // TO CREATE BUTTONS WITH ROOMS
       // Object.entries(chats).map((chats) => {
       //   const roomId = chats[0];
       //   $('#chats').empty();
@@ -98,6 +91,7 @@ const interface = new Vue({
       //   document.body.appendChild(newButton);
       // });
     },
+
     async openChat(mouse) {
       document.cookie = 'currentRoom=' + mouse.path[0].className.split(' ')[1];
       document.cookie = 'username=' + this.username;
@@ -106,18 +100,26 @@ const interface = new Vue({
 
     async findUsers() {
       const users = this.usernames.split(' ');
-      const result = await (
-        await fetch('http://localhost:8080/interface/find_users', {
-          method: 'POST',
-          body: JSON.stringify(users),
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        })
-      ).json();
-      if (result.statusCode === 404)
-        return (this.status = 'cannot find the users');
+      this.socket.emit('createNewRoom', {
+        participantUsernames: users,
+        roomName: this.roomName,
+      });
+
       this.getChats();
+    },
+
+    async setInterfaceSockets() {
+      this.socket.on('getUserRooms', (data) => {
+        console.log(data);
+      });
+
+      this.socket.on('newError', (data) => {
+        console.log(data);
+      });
+
+      this.socket.on('createNewRoom', () => {
+        this.getChats;
+      });
     },
   },
 });
@@ -194,7 +196,7 @@ const test = new Vue({
   methods: {
     async testGettingImages() {
       this.socket = await io('http://localhost:8080/');
-      this.socket.emmit('getUserRooms');
+      this.socket.emit('getUserRooms');
       this.socket.on('getUserRooms', (data) => {
         console.log('got all rooms: ', data);
       });

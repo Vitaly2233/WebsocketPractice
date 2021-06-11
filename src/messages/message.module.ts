@@ -8,10 +8,12 @@ import { secretValue } from 'src/constants/jwt.constants';
 import { MessageService } from './message.service';
 import { UserSchema } from 'src/auth/Schema/user.schema';
 import { ChatInterfaceModule } from 'src/chat-interface/chat-interface.module';
+import { MongooseHelpModule } from 'src/mongoose-help/mongoose-help.module';
 
 @Module({
   providers: [MessageGateway, MessageService],
   imports: [
+    MongooseHelpModule,
     MongooseModule.forFeature([
       { name: 'message', schema: MessageSchema },
       { name: 'room', schema: RoomSchema },

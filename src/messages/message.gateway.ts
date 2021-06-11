@@ -17,8 +17,9 @@ import { MessageService } from './message.service';
 import { CookieParserInterceptor } from './interceptor/cookie-parser.interceptor';
 import { ExceptionInterceptor } from './interceptor/exception.interceptor';
 import { ConnectionService } from 'src/chat-interface/connection.service';
-import { MessageFrontend } from './interface/message-frontend';
+import { IMessageFrontend } from './interface/message-frontend';
 import { User, UserDocument } from 'src/auth/Schema/user.schema';
+import { MongooseHelpService } from 'src/mongoose-help/mongoose-help.service';
 
 @WebSocketGateway()
 @UseGuards(TokenGuard)
@@ -27,8 +28,7 @@ export class MessageGateway {
   constructor(
     private messageService: MessageService,
     private connetionService: ConnectionService,
-    @InjectModel('message') private messageModel: Model<MessageDocument>,
-    @InjectModel('room') private roomModel: Model<RoomDocument>,
+    private mongooseHelp: MongooseHelpService,
     @InjectModel('user') private userModel: Model<UserDocument>,
   ) {}
 
@@ -37,12 +37,17 @@ export class MessageGateway {
   @SubscribeMessage('createNewRoom')
   async createNewRoom(
     @ConnectedSocket() client: ISocketClient,
-    @MessageBody() participants: string[],
+    @MessageBody() body: { participantUsernames: string[]; roomName: string },
   ) {
-    return this.messageService.createNewRoom(
-      client.userData.user,
-      participants,
+    const result = this.messageService.createRoom(
+      body.roomName,
+      body.participantUsernames,
+      this.server,
     );
+
+    if (!result) throw new WsException('user was not found');
+
+    client.emit('createNewRoom');
   }
 
   @SubscribeMessage('getAllMessagesInRoom')
@@ -57,7 +62,7 @@ export class MessageGateway {
     @ConnectedSocket() client: ISocketClient,
     @MessageBody() text: string,
   ) {
-    const messageFronted: MessageFrontend =
+    const messageFronted: IMessageFrontend =
       await this.messageService.saveMessage(client, text);
 
     const roomPopulatedOnline = await client.userData.room
