@@ -57,6 +57,7 @@ export class ChatInterfaceGateWay
     @ConnectedSocket() client: ISocketClient,
     @MessageBody() body: { participantUsernames: string[]; roomName: string },
   ) {
+    body.participantUsernames.push(client.userData.user.username);
     const result = this.chatInterfaceService.createRoom(
       body.roomName,
       body.participantUsernames,

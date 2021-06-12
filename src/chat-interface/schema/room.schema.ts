@@ -3,6 +3,7 @@ import * as mongoose from 'mongoose';
 import { ObjectId } from 'bson';
 import { User } from 'src/auth/Schema/user.schema';
 import { Message } from 'src/messages/schema/message.schema';
+import { ISocketClient } from '../interface/socket-client';
 
 export type RoomDocument = Room & mongoose.Document;
 
@@ -50,3 +51,7 @@ export class Room {
 }
 
 export const RoomSchema = SchemaFactory.createForClass(Room);
+
+RoomSchema.post('save', (error, next, data) => {
+  if (error) console.log('error occured');
+});

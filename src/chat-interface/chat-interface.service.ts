@@ -65,14 +65,14 @@ export class ChatInterfaceService {
 
     if (users.includes(undefined) || users.length === 0) return false;
 
-    users.forEach((user: UserDocument) => {
+    users.forEach(async (user: UserDocument) => {
       newRoom.participants.push(user._id);
-      this.userModel.findByIdAndUpdate(user._id, {
+      await this.userModel.findByIdAndUpdate(user._id, {
         $push: { rooms: newRoom._id },
       });
-      server.to(activeConnected[user._id]).emit('getUserRooms');
     });
-    await newRoom.save();
+    newRoom.save();
+
     let resultOfMethod: ICreateRoomRes = {};
     resultOfMethod = {
       status: true,
@@ -83,7 +83,6 @@ export class ChatInterfaceService {
   }
 
   // additional functions which aren't used directly into gateway
-
   async getUserUnread(
     userId: ObjectId,
     roomId: mongoose.ObjectId | string,
