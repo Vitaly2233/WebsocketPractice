@@ -55,6 +55,7 @@ export class ConnectionService {
       client.emit('newError', { message: 'user is not found' });
       return client.disconnect();
     }
+
     this.activeConnected[user._id] = client.id;
     console.log(
       'user is connected and new list is like: ',
@@ -83,7 +84,7 @@ export class ConnectionService {
     );
   }
 
-  async connectToTheRoom(client: ISocketClient, room: Room) {
+  async connectToTheRoom(client: ISocketClient, room: RoomDocument) {
     const removedUnread = this.removeUserUnread(client.userData.user, room._id);
     if (!removedUnread)
       throw new WsException('user is not found to delete hiw unreads');
@@ -95,7 +96,7 @@ export class ConnectionService {
     );
     if (!changedStatus) throw new WsException('status is not changed');
 
-    const messages = await this.messageSrvice.getAllMessages(client);
+    const messages = await this.messageSrvice.getAllMessages(client, room);
     client.emit('getAllMessages', messages);
   }
 

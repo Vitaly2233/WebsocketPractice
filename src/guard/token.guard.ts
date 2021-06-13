@@ -24,6 +24,7 @@ export class TokenGuard implements CanActivate {
     try {
       verifiedData = await this.jwtService.verify(token);
     } catch (e) {
+      await client.disconnect();
       return false;
     }
 
@@ -33,6 +34,7 @@ export class TokenGuard implements CanActivate {
       });
     } catch (e) {
       client.emit('newError', { message: 'user does not exist' });
+      await client.disconnect();
       return false;
     }
 

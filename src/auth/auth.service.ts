@@ -38,7 +38,6 @@ export class AuthService {
     } catch (e) {
       throw new HttpException("invalid username, or user doesn't exist", 404);
     }
-
     const isEqual: boolean = await bcrypt.compare(password, user.password);
     if (!isEqual) throw new HttpException('wrong password', 404);
     const tokenData: ITokenData = {

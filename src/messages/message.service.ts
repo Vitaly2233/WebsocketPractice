@@ -46,8 +46,8 @@ export class MessageService {
 
   async getAllMessages(
     @ConnectedSocket() client: ISocketClient,
+    room: RoomDocument,
   ): Promise<IMessageFrontend[] | WsException> {
-    const room: RoomDocument = client.userData.room;
     const populatedRoomsParticipants: RoomDocument = await room
       .populate('participants')
       .execPopulate();

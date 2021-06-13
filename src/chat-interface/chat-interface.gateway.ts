@@ -16,6 +16,7 @@ import { MessageService } from 'src/messages/message.service';
 import { TokenGuard } from 'src/guard/token.guard';
 import { ChatInterfaceService } from './chat-interface.service';
 import { ConnectionService } from './connection.service';
+import { clearConfigCache } from 'prettier';
 
 @WebSocketGateway()
 @UseGuards(TokenGuard)
@@ -44,14 +45,6 @@ export class ChatInterfaceGateWay
     return client.emit('getUserRooms', chats);
   }
 
-  @SubscribeMessage('connectToTheRoom')
-  async connectToTheRoom(@ConnectedSocket() client: ISocketClient) {
-    return await this.connectionSevice.connectToTheRoom(
-      client,
-      client.userData.room,
-    );
-  }
-
   @SubscribeMessage('createNewRoom')
   async createNewRoom(
     @ConnectedSocket() client: ISocketClient,
@@ -64,6 +57,18 @@ export class ChatInterfaceGateWay
       this.server,
     );
     if (!result) throw new WsException('user was not found');
-    client.emit('createNewRoom');
+    client.emit('getUserRooms');
+  }
+
+  @SubscribeMessage('connectToTheRoom')
+  async connectToTheRoom(@ConnectedSocket() client: ISocketClient) {
+    const room = client.userData.room;
+    await this.connectionSevice.connectToTheRoom(client, room);
+    return await client.join(room._id);
+  }
+
+  @SubscribeMessage('getUsername')
+  getUsername(@ConnectedSocket() client: ISocketClient) {
+    client.emit('getUsername', client.userData.user.username);
   }
 }

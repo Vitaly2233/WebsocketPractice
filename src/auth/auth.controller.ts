@@ -11,10 +11,10 @@ import { RemovePasswordInterceptor } from './interceptor/remove-password.interce
 import { User, UserDocument } from './Schema/user.schema';
 
 @Controller('auth')
-@UseInterceptors(RemovePasswordInterceptor)
 export class AuthController {
   constructor(private authService: AuthService) {}
 
+  @UseInterceptors(RemovePasswordInterceptor)
   @Post('registration')
   register(
     @Body() body: { username: string; password: string },

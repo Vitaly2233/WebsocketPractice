@@ -35,7 +35,8 @@ export class MessageGateway {
 
   @SubscribeMessage('getAllMessagesInRoom')
   async getAllMessagesInRoom(@ConnectedSocket() client: ISocketClient) {
-    return this.messageService.getAllMessages(client);
+    const room = client.userData.room;
+    return this.messageService.getAllMessages(client, room);
   }
 
   @SubscribeMessage('sendMessage')

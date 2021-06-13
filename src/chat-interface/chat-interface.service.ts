@@ -4,9 +4,7 @@ import { ConnectedSocket } from '@nestjs/websockets';
 import { Model, ObjectId } from 'mongoose';
 import * as mongoose from 'mongoose';
 import { UserDocument } from 'src/auth/Schema/user.schema';
-import { MessageDocument } from 'src/messages/schema/message.schema';
 import { ICreateRoomRes } from 'src/mongoose-help/interface/create-room.interface';
-import { MongooseHelpService } from 'src/mongoose-help/mongoose-help.service';
 import { ConnectionService } from './connection.service';
 import { ISocketClient } from './interface/socket-client';
 import { Room, RoomDocument } from './schema/room.schema';
@@ -24,22 +22,36 @@ export class ChatInterfaceService {
 
   async getUserRooms(
     @ConnectedSocket() client: ISocketClient,
-  ): Promise<Record<RoomName, { id: ObjectId; unread: number }>> {
+  ): Promise<Record<RoomName, { id?: ObjectId; unread?: number }>[]> {
     const username: string = client.userData.user.username;
     // return to user his chats with participant usernames and ids of this chats
-    const sendUserRooms: Record<RoomName, { id: ObjectId; unread: number }> =
-      {};
     const userRoomsPopulated: UserDocument = await (
       await this.userModel.findOne({ username: username }).populate('rooms')
     ).execPopulate();
+
     const userRooms = userRoomsPopulated.rooms;
-    userRooms.forEach(async (userRoom: Room) => {
-      sendUserRooms[userRoom.roomName].unread = await this.getUserUnread(
+
+    const sendUserRooms: Record<
+      RoomName,
+      { id?: ObjectId; unread?: number }
+    >[] = [];
+    for (const userRoom of userRooms) {
+      // @ts-ignore
+      sendUserRooms[userRoom.roomName] = {};
+      const sendUserRoom: Record<RoomName, { id?: ObjectId; unread?: number }> =
+        {};
+      // @ts-ignore
+      sendUserRoom[userRoom.roomName].unread = await this.getUserUnread(
         client.userData.user._id,
+        // @ts-ignore
         userRoom._id,
       );
-      sendUserRooms[userRoom.roomName].id = userRoom._id as ObjectId;
-    });
+      // @ts-ignore
+      sendUserRoom[userRoom.roomName].id = userRoom._id as ObjectId;
+      sendUserRooms.push(sendUserRoom);
+    }
+
+    console.log(sendUserRooms);
 
     return sendUserRooms;
   }
@@ -49,7 +61,6 @@ export class ChatInterfaceService {
     participantUsernames: string[],
     server: ISocketClient,
   ): Promise<ICreateRoomRes | boolean> {
-    const activeConnected = this.connectionService.getActiveConnected();
     const newRoom = new this.roomModel({
       roomName: roomName,
       participants: [],
@@ -65,11 +76,13 @@ export class ChatInterfaceService {
 
     if (users.includes(undefined) || users.length === 0) return false;
 
+    const activeConnected = this.connectionService.getActiveConnected();
     users.forEach(async (user: UserDocument) => {
       newRoom.participants.push(user._id);
       await this.userModel.findByIdAndUpdate(user._id, {
         $push: { rooms: newRoom._id },
       });
+      server.to(activeConnected[user._id]).emit('getAllRooms');
     });
     newRoom.save();
 
