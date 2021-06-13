@@ -5,6 +5,7 @@ const auth = new Vue({
     username: '',
     password: '',
   },
+
   methods: {
     async setAuth() {
       document.getElementById('auth').hidden = false;
@@ -66,37 +67,20 @@ const interface = new Vue({
     status: '',
     socket: '',
   },
+
+  created() {
+    this.setInterface();
+  },
   methods: {
     async setInterface() {
-      this.username = auth.username;
       this.socket = await io('http://localhost:8080/');
-      await this.getChats();
       this.setInterfaceSockets();
+      await this.socket.emit('getUserRooms');
+      this.socket.emit('getUsername');
       document.getElementById('auth').hidden = true;
       document.getElementById('room').hidden = true;
       document.getElementById('interface').hidden = false;
     },
-
-    async getChats() {
-      // this.socket.emit('getUserRooms');
-      // TO CREATE BUTTONS WITH ROOMS
-      // Object.entries(chats).map((chats) => {
-      //   const roomId = chats[0];
-      //   $('#chats').empty();
-      //   const newButton = document.createElement('button');
-      //   newButton.className = 'chats-button ' + roomId;
-      //   newButton.innerHTML = chats[1];
-      //   newButton.addEventListener('click', this.openChat);
-      //   document.body.appendChild(newButton);
-      // });
-    },
-
-    async openChat(mouse) {
-      document.cookie = 'currentRoom=' + mouse.path[0].className.split(' ')[1];
-      document.cookie = 'username=' + this.username;
-      room.createSockets();
-    },
-
     async findUsers() {
       const users = this.usernames.split(' ');
       await this.socket.emit('createNewRoom', {
@@ -107,98 +91,125 @@ const interface = new Vue({
       this.getChats();
     },
 
+    async openChat(mouse) {
+      document.cookie = 'currentRoom=' + mouse.path[0].className.split(' ')[1];
+      await this.socket.emit('connectToTheRoom');
+      room.openChat();
+    },
+
+    async getChats(chats) {
+      console.log('chats:', chats);
+      // buttons with rooms
+      $('#chats').empty();
+      for (const [roomName, roomData] of Object.entries(chats)) {
+        const newButton = document.createElement('button');
+        newButton.id = 'chats';
+        newButton.className(`${roomData.id}`);
+        newButton.innerHTML = roomName;
+        newButton.addEventListener('click', this.openChat);
+        document.body.appendChild(newButton);
+      }
+    },
+
     async setInterfaceSockets() {
       this.socket.on('getUserRooms', (data) => {
-        console.log(data);
+        this.getChats(data);
       });
 
-      this.socket.on('newError', (data) => {
-        console.log(data);
+      this.socket.on('getUsername', (username) => {
+        if (!username) auth.setAuth();
+        this.username = username;
       });
 
-      this.socket.on('createNewRoom', () => {
-        this.getChats();
+      this.socket.on('newError', (error) => {
+        console.log(error);
       });
     },
   },
 });
 
-// const room = new Vue({
-//   el: '#room',
+const room = new Vue({
+  el: '#room',
+  data: {
+    name: '',
+    text: '',
+    messages: [],
+    participants: [],
+    socket: null,
+  },
+  methods: {
+    openChat() {
+      document.getElementById('auth').hidden = true;
+      const buttons = document.querySelectorAll('#chats');
+      for (let button of buttons) {
+        button.hidden = true;
+      }
+      document.getElementById('interface').hidden = true;
+      this.createSockets();
+      document.getElementById('room').hidden = false;
+    },
+
+    deleteAllMessages() {
+      this.socket.emit('deleteAllMessages');
+    },
+
+    sendMessage() {
+      if (this.validateInput()) {
+        this.socket.emit('sendMessage', this.text);
+        this.text = '';
+      }
+    },
+    receivedMessage(message) {
+      this.messages.push(message);
+    },
+    validateInput() {
+      return this.text.length > 0;
+    },
+
+    async createSockets() {
+      this.socket.on('getData', (data) => {
+        this.participants = data.participants;
+        const messages = data.messagesInRoom;
+        for (const message of messages) {
+          this.receivedMessage(message);
+        }
+      });
+
+      this.socket.on('sendMessage', (message) => {
+        this.receivedMessage(message);
+      });
+
+      this.socket.on('deleteAllMessages', (message) => {
+        this.messages = [];
+      });
+
+      this.openChat();
+    },
+
+    // closeChat() {
+    //   this.socket.disconnect();
+    //   interface.setInterface();
+    // },
+  },
+});
+
+// const test = new Vue({
+//   el: '#test',
 //   data: {
-//     name: '',
-//     text: '',
-//     messages: [],
-//     participants: [],
-//     socket: null,
+//     socket: '',
 //   },
 //   methods: {
-//     openChat() {
-//       document.getElementById('auth').hidden = true;
-//       const buttons = document.getElementsByClassName('chats-button');
-//       for (let button of buttons) {
-//         button.hidden = true;
-//       }
-//       document.getElementById('interface').hidden = true;
-//       document.getElementById('room').hidden = false;
-//     },
-
-//     deleteAllMessages() {
-//       this.socket.emit('deleteAllMessages');
-//     },
-
-//     sendMessage() {
-//       if (this.validateInput()) {
-//         this.socket.emit('sendMessage', this.text);
-//         this.text = '';
-//       }
-//     },
-//     receivedMessage(message) {
-//       this.messages.push(message);
-//     },
-//     validateInput() {
-//       return this.text.length > 0;
-//     },
-
-//     async createSockets() {
-//       this.socket.on('getData', (data) => {
-//         this.participants = data.participants;
-//         const messages = data.messagesInRoom;
-//         for (const message of messages) {
-//           this.receivedMessage(message);
-//         }
+//     async testGettingImages() {
+//       this.socket = await io('http://localhost:8080/');
+//       this.socket.emit('getUserRooms');
+//       this.socket.on('getUserRooms', (data) => {
+//         console.log('got all rooms: ', data);
 //       });
-
-//       this.socket.on('sendMessage', (message) => {
-//         this.receivedMessage(message);
-//       });
-
-//       this.socket.on('deleteAllMessages', (message) => {
-//         this.messages = [];
-//       });
-
-//       this.openChat();
-//     },
-
-//     closeChat() {
-//       this.socket.disconnect();
-//       interface.setInterface();
 //     },
 //   },
 // });
 
-const test = new Vue({
-  el: '#test',
-  data: {
-    socket: '',
-  },
-  methods: {
-    async testGettingImages() {
-      this.socket = await io('http://localhost:8080/');
-      this.socket.emit('getUserRooms');
-      this.socket.on('getUserRooms', (data) => {
-        console.log('got all rooms: ', data);
-      });
-    },
-  },
-});
+function getCookieValueByName(cookie, name) {
+  const match = cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+  return match ? match[2] : '';
+}
