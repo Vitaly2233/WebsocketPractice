@@ -2,6 +2,7 @@ import { HttpException } from '@nestjs/common';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { IsString, Length } from 'class-validator';
 import * as mongoose from 'mongoose';
+import { IUserRoom } from 'src/chat-interface/interface/user-rooms.interface';
 import { Room } from 'src/chat-interface/schema/room.schema';
 
 export type UnreadMessage = { id: string; count: number };
@@ -30,7 +31,7 @@ export class User {
     ref: 'room',
     default: [],
   })
-  rooms: mongoose.PopulatedDoc<Room | mongoose.ObjectId>[];
+  rooms: mongoose.PopulatedDoc<IUserRoom | mongoose.ObjectId>[];
 
   @Prop()
   unread: UnreadMessage[];

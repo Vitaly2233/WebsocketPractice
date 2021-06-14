@@ -26,10 +26,7 @@ export class SetCurrentRoomInterceptor implements NestInterceptor {
     const client: ISocketClient = context?.switchToWs()?.getClient();
     const cookie = client?.handshake?.headers?.cookie;
     const roomId = getCookieValueByName(cookie, 'currentRoom');
-    let room: RoomDocument;
-    try {
-      room = await this.roomModel.findById(roomId);
-    } catch (e) {}
+    const room: RoomDocument = await this.roomModel.findById(roomId);
     client.userData.room = room;
 
     return next.handle();

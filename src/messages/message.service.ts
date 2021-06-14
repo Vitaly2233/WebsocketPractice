@@ -5,9 +5,9 @@ import { Model, ObjectId } from 'mongoose';
 import * as mongoose from 'mongoose';
 import { User, UserDocument } from 'src/auth/Schema/user.schema';
 import { ISocketClient } from 'src/chat-interface/interface/socket-client';
-import { RoomDocument } from 'src/chat-interface/schema/room.schema';
 import { IMessageFrontend } from './interface/message-frontend';
 import { MessageDocument } from './schema/message.schema';
+import { isOnline, RoomDocument } from 'src/chat-interface/schema/room.schema';
 import { ConnectionService } from 'src/chat-interface/connection.service';
 import { MongooseHelpService } from 'src/mongoose-help/mongoose-help.service';
 
@@ -68,5 +68,28 @@ export class MessageService {
       messages.push({ username: message.username, text: message.text });
     });
     return messages;
+  }
+
+  async sendMessageToActiveConnected(
+    client: ISocketClient,
+    server: ISocketClient,
+    activeConnected,
+    message: IMessageFrontend,
+  ) {
+    const roomPopulatedOnline = await client.userData.room
+      .populate('online')
+      .execPopulate();
+
+    roomPopulatedOnline.isOnline.forEach(async (isOnline: isOnline) => {
+      if (isOnline.status) {
+        server
+          .to(activeConnected[isOnline.user as string])
+          .emit('newMessage', message);
+      } else {
+        await this.userModel.findByIdAndUpdate(isOnline.user, {
+          $inc: { ['unread.$.' + client.userData.room._id]: 1 },
+        });
+      }
+    });
   }
 }

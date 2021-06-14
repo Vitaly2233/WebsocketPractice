@@ -56,7 +56,15 @@ export class ConnectionService {
       return client.disconnect();
     }
 
-    this.activeConnected[user._id] = client.id;
+    if (user?._id == undefined) {
+      client.emit('newError', {
+        error: 'error',
+        message: "you're not authorized",
+      });
+      client.disconnect();
+    }
+
+    this.activeConnected[user?._id] = client.id;
     console.log(
       'user is connected and new list is like: ',
       this.activeConnected,
@@ -77,14 +85,14 @@ export class ConnectionService {
       username: username,
     });
 
-    delete this.activeConnected[user._id];
+    delete this.activeConnected[user?._id];
     console.log(
       'user is disconnected and connected list now is: ',
       this.activeConnected,
     );
   }
 
-  async connectToTheRoom(client: ISocketClient, room: RoomDocument) {
+  async getAllMessagesInRoom(client: ISocketClient, room: RoomDocument) {
     const removedUnread = this.removeUserUnread(client.userData.user, room._id);
     if (!removedUnread)
       throw new WsException('user is not found to delete hiw unreads');
@@ -106,6 +114,13 @@ export class ConnectionService {
   ): Promise<boolean> {
     const allUnread = user.unread;
     let index = 0;
+    //
+
+    if (allUnread.length == 0) {
+      return true;
+    }
+
+    //
     for (const unreadMessage of allUnread) {
       if (unreadMessage.id == roomId) {
         allUnread.splice(index);
@@ -123,6 +138,9 @@ export class ConnectionService {
     status: boolean,
   ) {
     let index = 0;
+
+    if (room.isOnline.length == 0) return true;
+
     for (const participant of room.isOnline) {
       if ((participant.user = userId)) {
         room.isOnline[index].status = status;

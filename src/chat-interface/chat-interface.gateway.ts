@@ -17,6 +17,7 @@ import { TokenGuard } from 'src/guard/token.guard';
 import { ChatInterfaceService } from './chat-interface.service';
 import { ConnectionService } from './connection.service';
 import { clearConfigCache } from 'prettier';
+import { ObjectId } from 'mongoose';
 
 @WebSocketGateway()
 @UseGuards(TokenGuard)
@@ -57,13 +58,16 @@ export class ChatInterfaceGateWay
       this.server,
     );
     if (!result) throw new WsException('user was not found');
-    client.emit('getUserRooms');
+
+    const chats = await this.chatInterfaceService.getUserRooms(client);
+    client.emit('getUserRooms', chats);
   }
 
   @SubscribeMessage('connectToTheRoom')
   async connectToTheRoom(@ConnectedSocket() client: ISocketClient) {
     const room = client.userData.room;
-    await this.connectionSevice.connectToTheRoom(client, room);
+    await this.connectionSevice.getAllMessagesInRoom(client, room);
+
     return await client.join(room._id);
   }
 

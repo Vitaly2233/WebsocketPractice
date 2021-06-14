@@ -30,14 +30,12 @@ export class AuthService {
     password: string;
   }): Promise<HttpException | JwtTokenDto> {
     const { username, password } = body;
-    let user: UserDocument;
-    try {
-      user = await this.userModel.findOne({
-        username: username,
-      });
-    } catch (e) {
+    const user = await this.userModel.findOne({
+      username: username,
+    });
+    if (!user)
       throw new HttpException("invalid username, or user doesn't exist", 404);
-    }
+
     const isEqual: boolean = await bcrypt.compare(password, user.password);
     if (!isEqual) throw new HttpException('wrong password', 404);
     const tokenData: ITokenData = {
