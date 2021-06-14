@@ -28,7 +28,6 @@
     "@nestjs/passport": "^7.1.5",
     "@nestjs/platform-express": "^7.6.15",
     "@nestjs/platform-socket.io": "^7.6.17",
-    "@nestjs/swagger": "^4.8.0",
     "@nestjs/websockets": "^7.6.17",
     "bcrypt": "^5.0.1",
     "class-transformer": "^0.4.0",
@@ -42,7 +41,6 @@
     "rimraf": "^3.0.2",
     "rxjs": "^6.6.6",
     "socket.io": "^2.4.1",
-    "swagger-ui-express": "^4.1.6",
     "vue": "^2.6.12"
   },
   "devDependencies": {

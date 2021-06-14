@@ -16,8 +16,8 @@ import { MessageService } from 'src/messages/message.service';
 import { TokenGuard } from 'src/guard/token.guard';
 import { ChatInterfaceService } from './chat-interface.service';
 import { ConnectionService } from './connection.service';
-import { clearConfigCache } from 'prettier';
-import { ObjectId } from 'mongoose';
+import { CreateRoomDto } from './interface/create-room.dto';
+import { IUserRoom } from './interface/user-rooms.interface';
 
 @WebSocketGateway()
 @UseGuards(TokenGuard)
@@ -49,8 +49,8 @@ export class ChatInterfaceGateWay
   @SubscribeMessage('createNewRoom')
   async createNewRoom(
     @ConnectedSocket() client: ISocketClient,
-    @MessageBody() body: { participantUsernames: string[]; roomName: string },
-  ) {
+    @MessageBody() body: CreateRoomDto,
+  ): Promise<IUserRoom[]> {
     body.participantUsernames.push(client.userData.user.username);
     const result = this.chatInterfaceService.createRoom(
       body.roomName,
@@ -60,19 +60,26 @@ export class ChatInterfaceGateWay
     if (!result) throw new WsException('user was not found');
 
     const chats = await this.chatInterfaceService.getUserRooms(client);
-    client.emit('getUserRooms', chats);
+
+    return client.emit<IUserRoom[]>('getUserRooms', chats);
   }
 
   @SubscribeMessage('connectToTheRoom')
   async connectToTheRoom(@ConnectedSocket() client: ISocketClient) {
     const room = client.userData.room;
-    await this.connectionSevice.getAllMessagesInRoom(client, room);
+    await this.connectionSevice.connectToTheRoom(client.userData, room);
+
+    const messages = await this.messageService.getAllMessages(
+      client.userData,
+      room,
+    );
+    client.emit('getAllMessages', messages);
 
     return await client.join(room._id);
   }
 
   @SubscribeMessage('getUsername')
-  getUsername(@ConnectedSocket() client: ISocketClient) {
-    client.emit('getUsername', client.userData.user.username);
+  getUsername(@ConnectedSocket() client: ISocketClient): string {
+    return client.emit<string>('getUsername', client.userData.user.username);
   }
 }

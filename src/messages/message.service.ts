@@ -10,6 +10,7 @@ import { MessageDocument } from './schema/message.schema';
 import { isOnline, RoomDocument } from 'src/chat-interface/schema/room.schema';
 import { ConnectionService } from 'src/chat-interface/connection.service';
 import { MongooseHelpService } from 'src/mongoose-help/mongoose-help.service';
+import { IUserData } from 'src/chat-interface/interface/user-data.dto';
 
 @Injectable()
 export class MessageService {
@@ -45,7 +46,7 @@ export class MessageService {
   }
 
   async getAllMessages(
-    @ConnectedSocket() client: ISocketClient,
+    userData: IUserData,
     room: RoomDocument,
   ): Promise<IMessageFrontend[] | WsException> {
     const populatedRoomsParticipants: RoomDocument = await room
@@ -54,7 +55,7 @@ export class MessageService {
 
     const isParticipant = populatedRoomsParticipants.participants.map(
       (participant: User) => {
-        if (participant.username == client.userData.user.username) return true;
+        if (participant.username == userData.user.username) return true;
       },
     );
     if (!isParticipant.includes(true))

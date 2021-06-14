@@ -7,8 +7,9 @@ import { UserDocument } from 'src/auth/Schema/user.schema';
 import { getCookieValueByName } from 'src/helpers/get-cookie-value';
 import { MessageService } from 'src/messages/message.service';
 import { ISocketClient } from './interface/socket-client';
-import { ITokenData } from './interface/token-data';
+import { ITokenData } from '../auth/dto/token-data';
 import { Room, RoomDocument } from './schema/room.schema';
+import { IUserData } from './interface/user-data.dto';
 
 @Injectable()
 export class ConnectionService {
@@ -92,20 +93,17 @@ export class ConnectionService {
     );
   }
 
-  async getAllMessagesInRoom(client: ISocketClient, room: RoomDocument) {
-    const removedUnread = this.removeUserUnread(client.userData.user, room._id);
+  async connectToTheRoom(userData: IUserData, room: RoomDocument) {
+    const removedUnread = this.removeUserUnread(userData.user, room._id);
     if (!removedUnread)
       throw new WsException('user is not found to delete hiw unreads');
 
     const changedStatus = await this.changeUserStatusInRoom(
-      client.userData.user._id,
-      client.userData.room,
+      userData.user._id,
+      userData.room,
       true,
     );
     if (!changedStatus) throw new WsException('status is not changed');
-
-    const messages = await this.messageSrvice.getAllMessages(client, room);
-    client.emit('getAllMessages', messages);
   }
 
   async removeUserUnread(

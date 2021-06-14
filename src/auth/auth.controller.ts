@@ -22,7 +22,7 @@ export class AuthController {
   }
 
   @Post('login')
-  login(@Body() body: User): Promise<JwtTokenDto | HttpException> {
+  login(@Body() body: AuthDto): Promise<JwtTokenDto | HttpException> {
     return this.authService.login(body);
   }
 }

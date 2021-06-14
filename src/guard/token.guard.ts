@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { UserDocument } from 'src/auth/Schema/user.schema';
 import { ISocketClient } from 'src/chat-interface/interface/socket-client';
-import { ITokenData } from 'src/chat-interface/interface/token-data';
+import { ITokenData } from 'src/auth/dto/token-data';
 import { getCookieValueByName } from 'src/helpers/get-cookie-value';
 
 @Injectable()
@@ -29,6 +30,7 @@ export class TokenGuard implements CanActivate {
     }
 
     try {
+      // @ts-ignore
       client.userData.user = await this.userModel.findOne({
         username: verifiedData.username,
       });

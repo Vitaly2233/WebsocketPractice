@@ -5,7 +5,7 @@ import * as bcrypt from 'bcrypt';
 import { User, UserDocument } from './Schema/user.schema';
 import { JwtService } from '@nestjs/jwt';
 import { JwtTokenDto } from './dto/token.dto';
-import { ITokenData } from 'src/chat-interface/interface/token-data';
+import { ITokenData } from 'src/auth/dto/token-data';
 
 @Injectable()
 export class AuthService {

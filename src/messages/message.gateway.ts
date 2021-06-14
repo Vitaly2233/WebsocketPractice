@@ -31,9 +31,16 @@ export class MessageGateway {
   @WebSocketServer() server: ISocketClient;
 
   @SubscribeMessage('getAllMessagesInRoom')
-  async getAllMessagesInRoom(@ConnectedSocket() client: ISocketClient) {
+  async getAllMessagesInRoom(
+    @ConnectedSocket() client: ISocketClient,
+  ): Promise<IMessageFrontend | WsException> {
     const room = client.userData.room;
-    return this.messageService.getAllMessages(client, room);
+    const messages = await this.messageService.getAllMessages(
+      client.userData,
+      room,
+    );
+
+    return client.emit<IMessageFrontend>('getAllMessages', messages);
   }
 
   @SubscribeMessage('sendMessage')

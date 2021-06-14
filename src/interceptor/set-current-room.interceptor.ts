@@ -27,6 +27,8 @@ export class SetCurrentRoomInterceptor implements NestInterceptor {
     const cookie = client?.handshake?.headers?.cookie;
     const roomId = getCookieValueByName(cookie, 'currentRoom');
     const room: RoomDocument = await this.roomModel.findById(roomId);
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     client.userData.room = room;
 
     return next.handle();
