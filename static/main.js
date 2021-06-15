@@ -1,4 +1,4 @@
-let socket = '';
+let socket = null;
 
 const auth = new Vue({
   el: '#auth',
@@ -75,8 +75,10 @@ const interface = new Vue({
   },
   methods: {
     async setInterface() {
-      socket = await io('http://localhost:8080/');
-      setSocket();
+      if (!socket) {
+        socket = await io('http://localhost:8080/');
+        setSocket();
+      }
       socket.emit('getUserRooms');
       socket.emit('getUsername');
       document.getElementById('auth').hidden = true;
@@ -100,14 +102,15 @@ const interface = new Vue({
     async getChats(chats) {
       console.log(chats);
       // buttons with rooms
-      $('#chats').empty();
+      $('#chats').remove();
       for (const chat of chats) {
         const [roomName, roomData] = Object.entries(chat)[0];
 
         const newButton = document.createElement('button');
         newButton.id = 'chats';
+        console.log(roomData.id);
         newButton.className = `${roomData.id}`;
-        newButton.innerHTML = roomName;
+        newButton.innerHTML = roomName + ': ' + roomData.unread;
         newButton.addEventListener('click', this.openChat);
         document.body.appendChild(newButton);
       }
@@ -126,10 +129,7 @@ const room = new Vue({
   methods: {
     openChat() {
       document.getElementById('auth').hidden = true;
-      const buttons = document.querySelectorAll('#chats');
-      for (let button of buttons) {
-        button.hidden = true;
-      }
+      $('#chats').remove();
       document.getElementById('interface').hidden = true;
       document.getElementById('room').hidden = false;
     },
@@ -141,7 +141,7 @@ const room = new Vue({
     sendMessage() {
       if (this.validateInput()) {
         console.log(this.text);
-        // socket.emit('sendMessage', this.text);
+        socket.emit('sendMessage', this.text);
         this.text = '';
       }
     },
@@ -152,10 +152,11 @@ const room = new Vue({
       return this.text.length > 0;
     },
 
-    // closeChat() {
-    //   socket.disconnect();
-    //   interface.setInterface();
-    // },
+    closeChat() {
+      deleteCookie('currentRoom');
+      socket.emit('closeRoom');
+      interface.setInterface();
+    },
   },
 });
 
@@ -175,9 +176,17 @@ const room = new Vue({
 //   },
 // });
 
-function getCookieValueByName(cookie, name) {
-  const match = cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-  return match ? match[2] : '';
+function getCookie(name) {
+  var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+  return v ? v[2] : null;
+}
+function setCookie(name, value, days) {
+  var d = new Date();
+  d.setTime(d.getTime() + 24 * 60 * 60 * 1000 * days);
+  document.cookie = name + '=' + value + ';path=/;expires=' + d.toGMTString();
+}
+function deleteCookie(name) {
+  setCookie(name, '', -1);
 }
 
 const setSocket = () => {
@@ -191,8 +200,14 @@ const setSocket = () => {
   });
 
   socket.on('getUserRooms', (data) => {
-    console.log('user rooms is called');
     interface.getChats(data);
+  });
+
+  socket.on('getAllMessages', (messages) => {
+    room.messages = [];
+    messages.forEach((element) => {
+      room.receivedMessage(element);
+    });
   });
 
   socket.on('getUsername', (username) => {
@@ -204,7 +219,7 @@ const setSocket = () => {
     console.log(error);
   });
 
-  socket.on('sendMessage', (message) => {
+  socket.on('newMessage', (message) => {
     room.receivedMessage(message);
   });
 

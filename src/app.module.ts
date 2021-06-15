@@ -11,6 +11,7 @@ import { MessageSchema } from './messages/schema/message.schema';
   imports: [
     MongooseModule.forRoot('mongodb://localhost/nest', {
       useCreateIndex: true,
+      useNewUrlParser: true,
     }),
     AuthModule,
     ChatInterfaceModule,

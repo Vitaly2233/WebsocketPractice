@@ -89,8 +89,6 @@ export class ChatInterfaceService {
       });
       const updatedUser = await this.userModel.findById(user._id);
 
-      console.log('user in pre send to the user his rooms', updatedUser);
-
       const allUserRooms: IUserRoom[] = await this.getUserRooms(updatedUser);
 
       server

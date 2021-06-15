@@ -18,6 +18,7 @@ import { ChatInterfaceService } from './chat-interface.service';
 import { ConnectionService } from './connection.service';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { IUserRoom } from './interface/user-rooms.interface';
+import { IMessageFrontend } from 'src/messages/interface/message-frontend';
 
 @WebSocketGateway()
 @UseGuards(TokenGuard)
@@ -42,6 +43,12 @@ export class ChatInterfaceGateWay
 
   @SubscribeMessage('getUserRooms')
   async getUserRooms(@ConnectedSocket() client: ISocketClient) {
+    console.log(
+      '\n\n--------------------  ',
+      client.userData.room,
+      '  --------------------\n\n',
+    );
+
     const chats = await this.chatInterfaceService.getUserRooms(
       client.userData.user,
     );
@@ -70,17 +77,23 @@ export class ChatInterfaceGateWay
   }
 
   @SubscribeMessage('connectToTheRoom')
-  async connectToTheRoom(@ConnectedSocket() client: ISocketClient) {
+  async connectToTheRoom(
+    @ConnectedSocket() client: ISocketClient,
+  ): Promise<IMessageFrontend> {
     const room = client.userData.room;
     await this.connectionSevice.connectToTheRoom(client.userData, room);
 
-    // const messages = await this.messageService.getAllMessages(
-    //   client.userData,
-    //   room,
-    // );
-    // client.emit('getAllMessages', messages);
+    const messages = await this.messageService.getAllMessages(
+      client.userData,
+      room,
+    );
+    await client.join(room._id);
+    return client.emit<IMessageFrontend>('getAllMessages', messages);
+  }
 
-    // return await client.join(room._id);
+  @SubscribeMessage('closeRoom')
+  async closeRoom(@ConnectedSocket() client: ISocketClient) {
+    console.log(client.rooms);
   }
 
   @SubscribeMessage('getUsername')

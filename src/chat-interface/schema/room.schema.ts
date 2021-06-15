@@ -1,9 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
-import { ObjectId } from 'bson';
 import { User } from 'src/auth/Schema/user.schema';
 import { Message } from 'src/messages/schema/message.schema';
-import { ISocketClient } from '../interface/socket-client';
 
 export type RoomDocument = Room & mongoose.Document;
 

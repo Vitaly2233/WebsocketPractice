@@ -78,7 +78,7 @@ export class ConnectionService {
       return client.disconnect();
     }
 
-    this.activeConnected[user._id] = client.id;
+    this.activeConnected[user._id] = client.id.toString();
     console.log(
       'user is connected and new list is like: ',
       this.activeConnected,
@@ -137,14 +137,10 @@ export class ConnectionService {
     status: boolean,
   ) {
     let index = 0;
-    console.log(userId);
 
     for (const participant of room.isOnline) {
-      console.log(participant.user.toString() == userId.toString());
-
       if (participant.user.toString() == userId.toString()) {
         room.isOnline[index].status = status;
-        console.log(room.isOnline[index]);
         room.markModified('isOnline');
 
         await room.save();

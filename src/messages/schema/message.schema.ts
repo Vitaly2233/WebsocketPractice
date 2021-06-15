@@ -5,7 +5,7 @@ export type MessageDocument = Message & mongoose.Document;
 
 @Schema()
 export class Message {
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'user', required: true })
+  @Prop({ type: String, required: true })
   username: string;
 
   @Prop({ required: true })
@@ -16,3 +16,8 @@ export class Message {
 }
 
 export const MessageSchema = SchemaFactory.createForClass(Message);
+
+MessageSchema.pre('save', function (next) {
+  console.log('saving');
+  next();
+});

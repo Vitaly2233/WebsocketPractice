@@ -53,7 +53,7 @@ export class MessageGateway {
 
     const activeConnected = this.connetionService.getActiveConnected();
 
-    await this.messageService.sendMessageToActiveConnected(
+    await this.messageService.sendMessageToRoom(
       client,
       this.server,
       activeConnected,

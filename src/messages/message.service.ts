@@ -26,20 +26,24 @@ export class MessageService {
     text: string,
   ): Promise<IMessageFrontend> {
     const newMessage = new this.messageModel({
-      username: client.userData.user.username,
+      username: client.userData.user.username.toString(),
       text: text,
       room: client.userData.room._id,
     });
+
+    await newMessage.save();
 
     await this.roomModel.findByIdAndUpdate(client.userData.room._id, {
       $addToSet: { messages: newMessage._id },
     });
 
+    console.log('here');
+
     const IMessageFrontend: IMessageFrontend = {
       text: newMessage.text,
       username: newMessage.username,
     };
-    await newMessage.save();
+
     return IMessageFrontend;
   }
 
@@ -69,26 +73,21 @@ export class MessageService {
     return messages;
   }
 
-  async sendMessageToActiveConnected(
+  async sendMessageToRoom(
     client: ISocketClient,
     server: ISocketClient,
     activeConnected,
     message: IMessageFrontend,
   ) {
-    const roomPopulatedOnline = await client.userData.room
-      .populate('online')
-      .execPopulate();
-
-    roomPopulatedOnline.isOnline.forEach(async (isOnline: isOnline) => {
-      if (isOnline.status) {
+    for (const participant of client.userData.room.isOnline) {
+      if (activeConnected[participant.user.toString()] && participant.status)
         server
-          .to(activeConnected[isOnline.user as string])
+          .to(activeConnected[participant.user.toString()])
           .emit('newMessage', message);
-      } else {
-        await this.userModel.findByIdAndUpdate(isOnline.user, {
+      else
+        await this.userModel.findByIdAndUpdate(participant.user, {
           $inc: { ['unread.$.' + client.userData.room._id]: 1 },
         });
-      }
-    });
+    }
   }
 }
