@@ -8,18 +8,12 @@ import { ISocketClient } from '../interface/socket-client';
 export type RoomDocument = Room & mongoose.Document;
 
 export interface isOnline {
-  user: mongoose.PopulatedDoc<User | mongoose.Schema.Types.ObjectId | string>;
-  status: boolean;
+  user?: mongoose.PopulatedDoc<User | mongoose.Schema.Types.ObjectId | string>;
+  status?: boolean;
 }
 
 @Schema()
 export class Room {
-  @Prop({
-    type: mongoose.Schema.Types.ObjectId,
-    default: new ObjectId(),
-  })
-  _id: mongoose.Schema.Types.ObjectId | string;
-
   @Prop({
     type: mongoose.Schema.Types.String,
     required: true,
@@ -55,3 +49,16 @@ export const RoomSchema = SchemaFactory.createForClass(Room);
 RoomSchema.post('save', (error, next, data) => {
   if (error) console.log('error occured');
 });
+
+const handleE11000 = function (error, res, next) {
+  if (error.name === 'MongoError' && error.code === 11000) {
+    next(new Error('There was a duplicate key error'));
+  } else {
+    next();
+  }
+};
+
+RoomSchema.post('save', handleE11000);
+RoomSchema.post('update', handleE11000);
+RoomSchema.post('findOneAndUpdate', handleE11000);
+RoomSchema.post('insertMany', handleE11000);

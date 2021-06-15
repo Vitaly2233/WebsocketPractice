@@ -16,7 +16,7 @@ import { MessageService } from 'src/messages/message.service';
 import { TokenGuard } from 'src/guard/token.guard';
 import { ChatInterfaceService } from './chat-interface.service';
 import { ConnectionService } from './connection.service';
-import { CreateRoomDto } from './interface/create-room.dto';
+import { CreateRoomDto } from './dto/create-room.dto';
 import { IUserRoom } from './interface/user-rooms.interface';
 
 @WebSocketGateway()
@@ -42,7 +42,9 @@ export class ChatInterfaceGateWay
 
   @SubscribeMessage('getUserRooms')
   async getUserRooms(@ConnectedSocket() client: ISocketClient) {
-    const chats = await this.chatInterfaceService.getUserRooms(client);
+    const chats = await this.chatInterfaceService.getUserRooms(
+      client.userData.user,
+    );
     return client.emit('getUserRooms', chats);
   }
 
@@ -50,18 +52,19 @@ export class ChatInterfaceGateWay
   async createNewRoom(
     @ConnectedSocket() client: ISocketClient,
     @MessageBody() body: CreateRoomDto,
-  ): Promise<IUserRoom[]> {
+  ) /* : Promise<IUserRoom[]> */ {
     body.participantUsernames.push(client.userData.user.username);
     const result = this.chatInterfaceService.createRoom(
+      client.userData,
       body.roomName,
       body.participantUsernames,
       this.server,
     );
     if (!result) throw new WsException('user was not found');
 
-    const chats = await this.chatInterfaceService.getUserRooms(client);
+    // const chats = await this.chatInterfaceService.getUserRooms(client);
 
-    return client.emit<IUserRoom[]>('getUserRooms', chats);
+    // return client.emit<IUserRoom[]>('getUserRooms', chats);
   }
 
   @SubscribeMessage('connectToTheRoom')
@@ -69,13 +72,13 @@ export class ChatInterfaceGateWay
     const room = client.userData.room;
     await this.connectionSevice.connectToTheRoom(client.userData, room);
 
-    const messages = await this.messageService.getAllMessages(
-      client.userData,
-      room,
-    );
-    client.emit('getAllMessages', messages);
+    // const messages = await this.messageService.getAllMessages(
+    //   client.userData,
+    //   room,
+    // );
+    // client.emit('getAllMessages', messages);
 
-    return await client.join(room._id);
+    // return await client.join(room._id);
   }
 
   @SubscribeMessage('getUsername')

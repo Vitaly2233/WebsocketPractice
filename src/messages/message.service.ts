@@ -9,8 +9,7 @@ import { IMessageFrontend } from './interface/message-frontend';
 import { MessageDocument } from './schema/message.schema';
 import { isOnline, RoomDocument } from 'src/chat-interface/schema/room.schema';
 import { ConnectionService } from 'src/chat-interface/connection.service';
-import { MongooseHelpService } from 'src/mongoose-help/mongoose-help.service';
-import { IUserData } from 'src/chat-interface/interface/user-data.dto';
+import { IUserData } from 'src/chat-interface/dto/user-data.dto';
 
 @Injectable()
 export class MessageService {
@@ -20,7 +19,6 @@ export class MessageService {
     @InjectModel('user') private userModel: Model<UserDocument>,
     @Inject(forwardRef(() => ConnectionService))
     private connectionService: ConnectionService,
-    private mongooseHelpService: MongooseHelpService,
   ) {}
 
   async saveMessage(

@@ -6,7 +6,6 @@ import { ChatInterfaceModule } from './chat-interface/chat-interface.module';
 import { RoomSchema } from './chat-interface/schema/room.schema';
 import { MessageModule } from './messages/message.module';
 import { MessageSchema } from './messages/schema/message.schema';
-import { MongooseHelpModule } from './mongoose-help/mongoose-help.module';
 
 @Module({
   imports: [
@@ -16,7 +15,6 @@ import { MongooseHelpModule } from './mongoose-help/mongoose-help.module';
     AuthModule,
     ChatInterfaceModule,
     MessageModule,
-    MongooseHelpModule,
   ],
 })
 export class AppModule {}

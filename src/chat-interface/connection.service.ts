@@ -9,7 +9,7 @@ import { MessageService } from 'src/messages/message.service';
 import { ISocketClient } from './interface/socket-client';
 import { ITokenData } from '../auth/dto/token-data';
 import { Room, RoomDocument } from './schema/room.schema';
-import { IUserData } from './interface/user-data.dto';
+import { IUserData } from './dto/user-data.dto';
 
 @Injectable()
 export class ConnectionService {
@@ -49,23 +49,35 @@ export class ConnectionService {
       return client.disconnect();
     }
 
-    let user: UserDocument;
-    try {
-      user = await this.userModel.findOne({ username: username });
-    } catch (e) {
-      client.emit('newError', { message: 'user is not found' });
+    const user: UserDocument = await this.userModel.findOne({
+      username: username,
+    });
+
+    if (!user) {
+      client.emit('newError', {
+        error: 'error',
+        message: 'there is no user with the data',
+      });
       return client.disconnect();
     }
 
-    if (user?._id == undefined) {
+    if (!user) {
       client.emit('newError', {
         error: 'error',
         message: "you're not authorized",
       });
-      client.disconnect();
+      return client.disconnect();
     }
 
-    this.activeConnected[user?._id] = client.id;
+    if (this.activeConnected[user._id]) {
+      client.emit('newError', {
+        error: 'error',
+        message: "someone is connected to you'r account",
+      });
+      return client.disconnect();
+    }
+
+    this.activeConnected[user._id] = client.id;
     console.log(
       'user is connected and new list is like: ',
       this.activeConnected,
@@ -141,6 +153,7 @@ export class ConnectionService {
 
     for (const participant of room.isOnline) {
       if ((participant.user = userId)) {
+        room.isOnline[index] = {};
         room.isOnline[index].status = status;
         return true;
       }

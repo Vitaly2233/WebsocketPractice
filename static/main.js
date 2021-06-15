@@ -190,6 +190,7 @@ const setSocket = () => {
   });
 
   socket.on('getUserRooms', (data) => {
+    console.log('get user rooms method is called');
     interface.getChats(data);
   });
 

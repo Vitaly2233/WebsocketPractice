@@ -9,13 +9,6 @@ export type UnreadMessage = { id: string; count: number };
 
 @Schema()
 export class User {
-  @Prop({
-    unique: true,
-    type: mongoose.Types.ObjectId,
-    default: new mongoose.Types.ObjectId(),
-  })
-  _id: mongoose.ObjectId | string;
-
   @IsString()
   @Length(4, 16)
   @Prop({ unique: true })
