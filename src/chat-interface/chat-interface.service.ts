@@ -105,9 +105,8 @@ export class ChatInterfaceService {
     roomId: mongoose.ObjectId | string,
   ): Promise<number> {
     const user: UserDocument = await this.userModel.findById(userId);
-    for (const message of user.unread) {
-      if (message.id == roomId) return message.count;
-    }
+
+    if (user.unread[roomId.toString()]) return user.unread[roomId.toString()];
     return 0;
   }
 }

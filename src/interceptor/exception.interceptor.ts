@@ -19,8 +19,6 @@ export class ExceptionInterceptor implements NestInterceptor {
     const client: ISocketClient = context.switchToWs().getClient();
     return next.handle().pipe(
       catchError((error) => {
-        console.log(error);
-
         if (error instanceof Error)
           client.emit('newError', {
             status: 'error',
@@ -29,6 +27,7 @@ export class ExceptionInterceptor implements NestInterceptor {
 
         if (error instanceof WsException)
           client.emit('newError', { status: 'error', message: error.message });
+        console.log(error);
         return 'error';
       }),
     );

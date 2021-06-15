@@ -43,12 +43,7 @@ export class ChatInterfaceGateWay
 
   @SubscribeMessage('getUserRooms')
   async getUserRooms(@ConnectedSocket() client: ISocketClient) {
-    console.log(
-      '\n\n--------------------  ',
-      client.userData.room,
-      '  --------------------\n\n',
-    );
-
+    if (!client.userData.user) throw new WsException("you're not authorized");
     const chats = await this.chatInterfaceService.getUserRooms(
       client.userData.user,
     );

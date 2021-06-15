@@ -84,10 +84,11 @@ export class MessageService {
         server
           .to(activeConnected[participant.user.toString()])
           .emit('newMessage', message);
-      else
+      else {
         await this.userModel.findByIdAndUpdate(participant.user, {
           $inc: { ['unread.$.' + client.userData.room._id]: 1 },
         });
+      }
     }
   }
 }

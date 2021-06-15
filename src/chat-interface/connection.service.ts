@@ -116,19 +116,9 @@ export class ConnectionService {
   private async removeUserUnread(
     user: UserDocument,
     roomId: string | Schema.Types.ObjectId,
-  ): Promise<boolean> {
+  ) {
     const allUnread = user.unread;
-    let index = 0;
-
-    for (const unreadMessage of allUnread) {
-      if (unreadMessage.id == roomId) {
-        allUnread.splice(index);
-        await user.save();
-        return true;
-      }
-      index++;
-    }
-    return false;
+    allUnread[roomId.toString()] = 0;
   }
 
   private async changeUserStatusInRoom(

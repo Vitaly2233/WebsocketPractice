@@ -5,7 +5,10 @@ import * as mongoose from 'mongoose';
 import { IUserRoom } from 'src/chat-interface/interface/user-rooms.interface';
 import { Room } from 'src/chat-interface/schema/room.schema';
 
-export type UnreadMessage = { id: string; count: number };
+type RoomId = string;
+type count = number;
+
+export type UnreadMessage = Record<RoomId, count>;
 
 @Schema()
 export class User {
@@ -26,8 +29,8 @@ export class User {
   })
   rooms: mongoose.PopulatedDoc<IUserRoom | mongoose.ObjectId>[];
 
-  @Prop()
-  unread: UnreadMessage[];
+  @Prop({ default: {}, type: Object })
+  unread: UnreadMessage;
 }
 
 export type UserDocument = User & mongoose.Document;

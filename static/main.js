@@ -76,6 +76,7 @@ const interface = new Vue({
   methods: {
     async setInterface() {
       if (!socket) {
+        console.log('socket');
         socket = await io('http://localhost:8080/');
         setSocket();
       }
