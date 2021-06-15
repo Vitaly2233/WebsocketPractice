@@ -142,7 +142,7 @@ const room = new Vue({
       if (this.validateInput()) {
         console.log(this.text);
         // socket.emit('sendMessage', this.text);
-        // this.text = '';
+        this.text = '';
       }
     },
     receivedMessage(message) {

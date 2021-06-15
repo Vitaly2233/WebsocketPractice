@@ -49,16 +49,3 @@ export const RoomSchema = SchemaFactory.createForClass(Room);
 RoomSchema.post('save', (error, next, data) => {
   if (error) console.log('error occured');
 });
-
-const handleE11000 = function (error, res, next) {
-  if (error.name === 'MongoError' && error.code === 11000) {
-    next(new Error('There was a duplicate key error'));
-  } else {
-    next();
-  }
-};
-
-RoomSchema.post('save', handleE11000);
-RoomSchema.post('update', handleE11000);
-RoomSchema.post('findOneAndUpdate', handleE11000);
-RoomSchema.post('insertMany', handleE11000);

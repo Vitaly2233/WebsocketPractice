@@ -37,10 +37,8 @@ export class ChatInterfaceService {
     >[] = [];
     for (const userRoom of userRooms) {
       const sendUserRoom: IUserRoom = {};
-
       //@ts-ignore
       sendUserRoom[userRoom.roomName] = {};
-
       // @ts-ignore
       sendUserRoom[userRoom.roomName].unread = await this.getUserUnread(
         user._id,
@@ -52,9 +50,6 @@ export class ChatInterfaceService {
 
       sendUserRooms.push(sendUserRoom);
     }
-
-    console.log('sending rooms to ', user.username, 'data: ', sendUserRooms);
-
     return sendUserRooms;
   }
 

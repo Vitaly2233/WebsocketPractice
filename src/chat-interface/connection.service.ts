@@ -20,6 +20,7 @@ export class ConnectionService {
     @Inject(forwardRef(() => MessageService))
     private messageSrvice: MessageService,
     @InjectModel('user') private userModel: Model<UserDocument>,
+    @InjectModel('room') private roomModel: Model<RoomDocument>,
   ) {}
 
   getActiveConnected() {
@@ -106,31 +107,19 @@ export class ConnectionService {
   }
 
   async connectToTheRoom(userData: IUserData, room: RoomDocument) {
-    const removedUnread = this.removeUserUnread(userData.user, room._id);
-    if (!removedUnread)
-      throw new WsException('user is not found to delete hiw unreads');
+    await this.removeUserUnread(userData.user, room._id);
 
-    const changedStatus = await this.changeUserStatusInRoom(
-      userData.user._id,
-      userData.room,
-      true,
-    );
-    if (!changedStatus) throw new WsException('status is not changed');
+    await this.changeUserStatusInRoom(userData.user._id, userData.room, true);
   }
 
-  async removeUserUnread(
+  // helping functions
+  private async removeUserUnread(
     user: UserDocument,
     roomId: string | Schema.Types.ObjectId,
   ): Promise<boolean> {
     const allUnread = user.unread;
     let index = 0;
-    //
 
-    if (allUnread.length == 0) {
-      return true;
-    }
-
-    //
     for (const unreadMessage of allUnread) {
       if (unreadMessage.id == roomId) {
         allUnread.splice(index);
@@ -142,19 +131,23 @@ export class ConnectionService {
     return false;
   }
 
-  async changeUserStatusInRoom(
+  private async changeUserStatusInRoom(
     userId: string,
     room: RoomDocument,
     status: boolean,
   ) {
     let index = 0;
-
-    if (room.isOnline.length == 0) return true;
+    console.log(userId);
 
     for (const participant of room.isOnline) {
-      if ((participant.user = userId)) {
-        room.isOnline[index] = {};
+      console.log(participant.user.toString() == userId.toString());
+
+      if (participant.user.toString() == userId.toString()) {
         room.isOnline[index].status = status;
+        console.log(room.isOnline[index]);
+        room.markModified('isOnline');
+
+        await room.save();
         return true;
       }
       index++;
