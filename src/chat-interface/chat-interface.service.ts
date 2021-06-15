@@ -1,14 +1,13 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { ConnectedSocket } from '@nestjs/websockets';
 import { Model, ObjectId } from 'mongoose';
 import * as mongoose from 'mongoose';
 import { UserDocument } from 'src/auth/Schema/user.schema';
 // import { ICreateRoomRes } from 'src/mongoose-help/interface/create-room.interface';
 import { ConnectionService } from './connection.service';
 import { ISocketClient } from './interface/socket-client';
-import { Room, RoomDocument } from './schema/room.schema';
+import { RoomDocument } from './schema/room.schema';
 import { IUserRoom } from './interface/user-rooms.interface';
 import { MessageService } from 'src/messages/message.service';
 import { IUserData } from './dto/user-data.dto';
@@ -26,12 +25,10 @@ export class ChatInterfaceService {
   ) {}
 
   async getUserRooms(user: UserDocument): Promise<IUserRoom[]> {
-    const username: string = user.username;
     // return to user his chats with participant usernames and ids of this chats
-    const userRoomsPopulated: UserDocument = await (
-      await this.userModel.findOne({ username: username }).populate('rooms')
-    ).execPopulate();
-
+    const userRoomsPopulated: UserDocument = await user
+      .populate('rooms')
+      .execPopulate();
     const userRooms = userRoomsPopulated.rooms;
 
     const sendUserRooms: Record<
@@ -39,9 +36,9 @@ export class ChatInterfaceService {
       { id?: ObjectId; unread?: number }
     >[] = [];
     for (const userRoom of userRooms) {
-      // @ts-ignore
       const sendUserRoom: IUserRoom = {};
-      // @ts-ignore
+
+      //@ts-ignore
       sendUserRoom[userRoom.roomName] = {};
 
       // @ts-ignore
@@ -55,6 +52,8 @@ export class ChatInterfaceService {
 
       sendUserRooms.push(sendUserRoom);
     }
+
+    console.log('sending rooms to ', user.username, 'data: ', sendUserRooms);
 
     return sendUserRooms;
   }
@@ -84,21 +83,31 @@ export class ChatInterfaceService {
     const activeConnected = this.connectionService.getActiveConnected();
     for (const user of users) {
       newRoom.participants.push(user._id);
+      newRoom.isOnline.push({ user: user._id, status: false });
+    }
+    await newRoom.save();
+
+    for (const user of users) {
+      // this shit doesn't return updated user so I have to make additional request to get updated user
       await this.userModel.findByIdAndUpdate(user._id, {
         $push: { rooms: newRoom._id },
       });
+      const updatedUser = await this.userModel.findById(user._id);
 
-      // fix here
-      const allUserRooms: IUserRoom[] = await this.getUserRooms(user);
-      server.to(activeConnected[user._id]).emit('getUserRooms', allUserRooms);
+      console.log('user in pre send to the user his rooms', updatedUser);
+
+      const allUserRooms: IUserRoom[] = await this.getUserRooms(updatedUser);
+
+      server
+        .to(activeConnected[updatedUser._id])
+        .emit('getUserRooms', allUserRooms);
     }
 
-    await newRoom.save();
     return true;
   }
 
   // additional functions which aren't used directly into gateway
-  async getUserUnread(
+  private async getUserUnread(
     userId: ObjectId,
     roomId: mongoose.ObjectId | string,
   ): Promise<number> {

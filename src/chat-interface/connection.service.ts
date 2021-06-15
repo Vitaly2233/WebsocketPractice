@@ -8,7 +8,7 @@ import { getCookieValueByName } from 'src/helpers/get-cookie-value';
 import { MessageService } from 'src/messages/message.service';
 import { ISocketClient } from './interface/socket-client';
 import { ITokenData } from '../auth/dto/token-data';
-import { Room, RoomDocument } from './schema/room.schema';
+import { RoomDocument } from './schema/room.schema';
 import { IUserData } from './dto/user-data.dto';
 
 @Injectable()

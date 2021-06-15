@@ -98,6 +98,7 @@ const interface = new Vue({
     },
 
     async getChats(chats) {
+      console.log(chats);
       // buttons with rooms
       $('#chats').empty();
       for (const chat of chats) {
@@ -190,7 +191,7 @@ const setSocket = () => {
   });
 
   socket.on('getUserRooms', (data) => {
-    console.log('get user rooms method is called');
+    console.log('user rooms is called');
     interface.getChats(data);
   });
 

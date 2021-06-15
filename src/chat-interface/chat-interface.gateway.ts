@@ -52,7 +52,7 @@ export class ChatInterfaceGateWay
   async createNewRoom(
     @ConnectedSocket() client: ISocketClient,
     @MessageBody() body: CreateRoomDto,
-  ) /* : Promise<IUserRoom[]> */ {
+  ): Promise<IUserRoom[]> {
     body.participantUsernames.push(client.userData.user.username);
     const result = this.chatInterfaceService.createRoom(
       client.userData,
@@ -62,9 +62,11 @@ export class ChatInterfaceGateWay
     );
     if (!result) throw new WsException('user was not found');
 
-    // const chats = await this.chatInterfaceService.getUserRooms(client);
+    const chats = await this.chatInterfaceService.getUserRooms(
+      client.userData.user,
+    );
 
-    // return client.emit<IUserRoom[]>('getUserRooms', chats);
+    return client.emit<IUserRoom[]>('getUserRooms', chats);
   }
 
   @SubscribeMessage('connectToTheRoom')
