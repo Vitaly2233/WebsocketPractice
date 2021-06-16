@@ -215,7 +215,11 @@ const setSocket = () => {
   });
 
   socket.on('newMessage', (message) => {
-    room.receivedMessage(message);
+    console.log('got new message', message);
+    if (document.getElementById('interface').hidden) {
+      room.receivedMessage(message);
+    }
+    socket.emit('getUserRooms');
   });
 
   socket.on('deleteAllMessages', (message) => {

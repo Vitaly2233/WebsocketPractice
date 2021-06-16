@@ -49,14 +49,14 @@ export class MessageGateway {
     @ConnectedSocket() client: ISocketClient,
     @MessageBody() text: string,
   ) {
-    // const messageFronted: IMessageFrontend =
-    //   await this.messageService.saveMessage(client.userData, text);
-    // const activeConnected = this.connetionService.getActiveConnected();
-    // await this.messageService.sendMessageToRoom(
-    //   client,
-    //   this.server,
-    //   activeConnected,
-    //   messageFronted,
-    // );
+    const messageFronted: IMessageFrontend =
+      await this.messageService.saveMessage(client.userData, text);
+    const activeConnected = this.connetionService.getActiveConnected();
+    await this.messageService.sendMessageToRoom(
+      client,
+      this.server,
+      activeConnected,
+      messageFronted,
+    );
   }
 }

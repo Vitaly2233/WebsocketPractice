@@ -36,11 +36,17 @@ export class ConnectionService {
     }
     const token: string | undefined = getCookieValueByName(cookie, 'token');
 
+    let verifiedData: ITokenData;
     // validating a token
-    const verifiedData: ITokenData = await this.jwtService.verify(token);
-
+    try {
+      verifiedData = await this.jwtService.verify(token);
+    } catch (e) {}
     if (!verifiedData) {
-      console.log('43');
+      client.emit('newError', { message: 'token is not provided' });
+      return client.disconnect();
+    }
+    if (!verifiedData) {
+      console.log('49');
 
       client.emit('newError', { message: "you're not authorized" });
       return client.disconnect();
@@ -65,7 +71,7 @@ export class ConnectionService {
     }
 
     if (!user) {
-      console.log('66');
+      console.log('74');
 
       client.emit('newError', {
         error: 'error',
@@ -93,15 +99,14 @@ export class ConnectionService {
     const cookie = client.handshake.headers.cookie;
     const token = getCookieValueByName(cookie, 'token');
 
-    let verifiedData: ITokenData;
+    let user: UserDocument;
     try {
-      verifiedData = await this.jwtService.verify(token);
+      const verifiedData: ITokenData = await this.jwtService.verify(token);
+      const { username } = verifiedData;
+      user = await this.userModel.findOne({
+        username: username,
+      });
     } catch (e) {}
-    const { username } = verifiedData;
-
-    const user: UserDocument = await this.userModel.findOne({
-      username: username,
-    });
 
     delete this.activeConnected[user?._id];
     console.log(
@@ -111,6 +116,7 @@ export class ConnectionService {
   }
 
   async connectToTheRoom(userData: IUserData, room: RoomDocument) {
+    // here is an error with _id
     await this.removeUserUnread(userData.user, room._id);
     await this.changeUserStatusInRoom(userData.user._id, userData.room, true);
   }
@@ -120,8 +126,11 @@ export class ConnectionService {
     user: UserDocument,
     roomId: string | Schema.Types.ObjectId,
   ) {
-    const allUnread = user.unread;
-    allUnread[roomId.toString()] = 0;
+    console.log(user.unread[roomId.toString()]);
+
+    user.unread[roomId.toString()] = 0;
+    user.markModified('unread');
+    user.save();
   }
 
   private async changeUserStatusInRoom(

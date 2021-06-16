@@ -35,10 +35,14 @@ export class TokenGuard implements CanActivate {
 
     const verifiedData: ITokenData = await this.jwtService.verify(token);
 
-    // @ts-ignore
-    client.userData.user = await this.userModel.findOne({
-      username: verifiedData.username,
-    });
+    await this.userModel
+      .findOne({
+        username: verifiedData.username,
+      })
+      .then((data) => {
+        // @ts-ignore
+        client.userData.user = data;
+      });
 
     if (!client.userData.user) {
       console.log('in token guard 44');

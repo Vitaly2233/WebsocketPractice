@@ -78,15 +78,13 @@ export class MessageService {
     message: IMessageFrontend,
   ) {
     for (const participant of client.userData.room.isOnline) {
-      if (activeConnected[participant.user.toString()] && participant.status)
-        server
-          .to(activeConnected[participant.user.toString()])
-          .emit('newMessage', message);
-      else {
+      if (!activeConnected[participant.user.toString()] && !participant.status)
         await this.userModel.findByIdAndUpdate(participant.user, {
-          $inc: { ['unread.$.' + client.userData.room._id]: 1 },
+          $inc: { ['unread.' + client.userData.room._id]: 1 },
         });
-      }
+      server
+        .to(activeConnected[participant.user.toString()])
+        .emit('newMessage', message);
     }
   }
 }

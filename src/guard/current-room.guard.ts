@@ -11,19 +11,20 @@ export class CurrentRoomGuard implements CanActivate {
   constructor(@InjectModel('room') private roomModel: Model<RoomDocument>) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    console.log('room guard is called');
     const client: ISocketClient = context?.switchToWs()?.getClient();
     const cookie = client?.handshake?.headers?.cookie;
-    console.log('cookie', cookie);
+    console.log('cookie in current room', cookie);
 
     const roomId = getCookieValueByName(cookie, 'currentRoom');
-    console.log('roomId from here: ', roomId);
+    console.log('roomId from cookie in current-room guard: ', roomId);
     if (!roomId) return throwError(client);
-    const room: RoomDocument = await this.roomModel.findById(roomId);
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    client.userData.room = room;
+    await this.roomModel.findById(roomId).then((data) => {
+      // @ts-ignore
+      client.userData.room = data;
+    });
+
+    console.log(client.userData.room);
 
     return true;
   }
