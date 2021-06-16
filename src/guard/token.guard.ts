@@ -19,27 +19,38 @@ export class TokenGuard implements CanActivate {
     const client: ISocketClient = context.switchToWs().getClient();
     client.userData = {};
     const cookie = client.handshake?.headers?.cookie;
-    const token: string = getCookieValueByName(cookie, 'token');
-    let verifiedData: ITokenData;
+    const date = new Date(Date.now()).toLocaleTimeString();
 
-    try {
-      verifiedData = await this.jwtService.verify(token);
-    } catch (e) {
-      await client.disconnect();
-      return false;
-    }
+    console.log(
+      '-------------------------------------------------------------------------------------',
+      date,
+    );
 
-    try {
-      // @ts-ignore
-      client.userData.user = await this.userModel.findOne({
-        username: verifiedData.username,
-      });
-    } catch (e) {
-      client.emit('newError', { message: 'user does not exist' });
-      await client.disconnect();
-      return false;
+    console.log('cookies in guard: ', cookie);
+    const tokens: string[] = await Promise.all([
+      getCookieValueByName(cookie, 'token'),
+    ]);
+    const token = tokens[0];
+    console.log('token in guard', token);
+
+    const verifiedData: ITokenData = await this.jwtService.verify(token);
+
+    // @ts-ignore
+    client.userData.user = await this.userModel.findOne({
+      username: verifiedData.username,
+    });
+
+    if (!client.userData.user) {
+      console.log('in token guard 44');
+
+      return throwError(client);
     }
 
     return true;
   }
+}
+
+function throwError(client: ISocketClient): boolean {
+  client.emit('newError', { error: 'error', message: "you're not authorized" });
+  return client.disconnect();
 }

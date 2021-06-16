@@ -99,6 +99,17 @@ export class ChatInterfaceService {
     return true;
   }
 
+  async getParticipantUsernamesOfRoom(room: RoomDocument) {
+    const populatedParticipantRoom: RoomDocument = await room
+      .populate('participants')
+      .execPopulate();
+    const usernames: string[] = [];
+    for (const participant of populatedParticipantRoom.participants) {
+      usernames.push(participant.username);
+    }
+    return usernames;
+  }
+
   // additional functions which aren't used directly into gateway
   private async getUserUnread(
     userId: ObjectId,

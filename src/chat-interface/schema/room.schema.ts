@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
-import { User } from 'src/auth/Schema/user.schema';
+import { User, UserDocument } from 'src/auth/Schema/user.schema';
 import { Message } from 'src/messages/schema/message.schema';
 
 export type RoomDocument = Room & mongoose.Document;
@@ -25,7 +25,9 @@ export class Room {
     required: true,
     ref: 'user',
   })
-  participants: mongoose.PopulatedDoc<User | mongoose.Schema.Types.ObjectId>[];
+  participants: mongoose.PopulatedDoc<
+    UserDocument | mongoose.Schema.Types.ObjectId
+  >[];
 
   @Prop({
     default: [],

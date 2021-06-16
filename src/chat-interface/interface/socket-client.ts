@@ -18,5 +18,5 @@ export interface ISocketClient {
 
   to(sendToWhom: string): ISocketClient;
 
-  disconnect(): any;
+  disconnect(): false;
 }

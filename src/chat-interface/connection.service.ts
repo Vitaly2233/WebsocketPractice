@@ -37,13 +37,15 @@ export class ConnectionService {
     const token: string | undefined = getCookieValueByName(cookie, 'token');
 
     // validating a token
-    let verifiedData: ITokenData;
-    try {
-      verifiedData = await this.jwtService.verify(token);
-    } catch (e) {
+    const verifiedData: ITokenData = await this.jwtService.verify(token);
+
+    if (!verifiedData) {
+      console.log('43');
+
       client.emit('newError', { message: "you're not authorized" });
       return client.disconnect();
     }
+
     const { username } = verifiedData;
     if (!username) {
       client.emit('newError', { message: 'cookie is missing' });
@@ -63,6 +65,8 @@ export class ConnectionService {
     }
 
     if (!user) {
+      console.log('66');
+
       client.emit('newError', {
         error: 'error',
         message: "you're not authorized",
@@ -108,7 +112,6 @@ export class ConnectionService {
 
   async connectToTheRoom(userData: IUserData, room: RoomDocument) {
     await this.removeUserUnread(userData.user, room._id);
-
     await this.changeUserStatusInRoom(userData.user._id, userData.room, true);
   }
 

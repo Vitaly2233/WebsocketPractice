@@ -10,7 +10,6 @@ import {
   WsException,
 } from '@nestjs/websockets';
 import { ISocketClient } from 'src/chat-interface/interface/socket-client';
-import { SetCurrentRoomInterceptor } from 'src/interceptor/set-current-room.interceptor';
 import { ExceptionInterceptor } from 'src/interceptor/exception.interceptor';
 import { MessageService } from 'src/messages/message.service';
 import { TokenGuard } from 'src/guard/token.guard';
@@ -19,10 +18,16 @@ import { ConnectionService } from './connection.service';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { IUserRoom } from './interface/user-rooms.interface';
 import { IMessageFrontend } from 'src/messages/interface/message-frontend';
+import { CurrentRoomGuard } from 'src/guard/current-room.guard';
+import { InjectModel } from '@nestjs/mongoose';
+import { UserDocument } from 'src/auth/Schema/user.schema';
+import { RoomDocument } from './schema/room.schema';
+import { Model } from 'mongoose';
+import { MessageDocument } from 'src/messages/schema/message.schema';
 
 @WebSocketGateway()
 @UseGuards(TokenGuard)
-@UseInterceptors(SetCurrentRoomInterceptor, ExceptionInterceptor)
+@UseInterceptors(ExceptionInterceptor)
 export class ChatInterfaceGateWay
   implements OnGatewayConnection, OnGatewayDisconnect
 {
@@ -30,6 +35,10 @@ export class ChatInterfaceGateWay
     private connectionSevice: ConnectionService,
     private chatInterfaceService: ChatInterfaceService,
     private messageService: MessageService,
+
+    @InjectModel('user') private userModel: Model<UserDocument>,
+    @InjectModel('room') private roomModel: Model<RoomDocument>,
+    @InjectModel('message') private messageModel: Model<MessageDocument>,
   ) {}
 
   @WebSocketServer() server;
@@ -43,7 +52,8 @@ export class ChatInterfaceGateWay
 
   @SubscribeMessage('getUserRooms')
   async getUserRooms(@ConnectedSocket() client: ISocketClient) {
-    if (!client.userData.user) throw new WsException("you're not authorized");
+    if (!client.userData.user)
+      throw new WsException('user in gettin user chats is not found');
     const chats = await this.chatInterfaceService.getUserRooms(
       client.userData.user,
     );
@@ -71,28 +81,42 @@ export class ChatInterfaceGateWay
     return client.emit<IUserRoom[]>('getUserRooms', chats);
   }
 
+  @UseGuards(CurrentRoomGuard)
   @SubscribeMessage('connectToTheRoom')
   async connectToTheRoom(
     @ConnectedSocket() client: ISocketClient,
-  ): Promise<IMessageFrontend> {
+  ) /* : Promise<IMessageFrontend> */ {
     const room = client.userData.room;
     await this.connectionSevice.connectToTheRoom(client.userData, room);
-
     const messages = await this.messageService.getAllMessages(
       client.userData,
       room,
     );
+    const participants =
+      await this.chatInterfaceService.getParticipantUsernamesOfRoom(
+        client.userData.room,
+      );
+    client.emit('getParticipants', participants);
     await client.join(room._id);
+
     return client.emit<IMessageFrontend>('getAllMessages', messages);
   }
 
   @SubscribeMessage('closeRoom')
   async closeRoom(@ConnectedSocket() client: ISocketClient) {
-    console.log(client.rooms);
+    console.log('closing a room');
   }
 
   @SubscribeMessage('getUsername')
   getUsername(@ConnectedSocket() client: ISocketClient): string {
+    console.log('get username is called');
+
     return client.emit<string>('getUsername', client.userData.user.username);
+  }
+
+  async deleteServerData() {
+    await this.userModel.deleteMany({});
+    await this.roomModel.deleteMany({});
+    await this.messageModel.deleteMany({});
   }
 }

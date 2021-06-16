@@ -8,12 +8,14 @@ import { ChatInterfaceGateWay } from './chat-interface.gateway';
 import { ConnectionService } from './connection.service';
 import { RoomSchema } from './schema/room.schema';
 import { ChatInterfaceService } from './chat-interface.service';
+import { MessageSchema } from 'src/messages/schema/message.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: 'user', schema: UserSchema },
       { name: 'room', schema: RoomSchema },
+      { name: 'message', schema: MessageSchema },
     ]),
     JwtModule.register({
       secret: secretValue,

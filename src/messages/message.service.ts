@@ -22,22 +22,20 @@ export class MessageService {
   ) {}
 
   async saveMessage(
-    client: ISocketClient,
+    userData: IUserData,
     text: string,
   ): Promise<IMessageFrontend> {
     const newMessage = new this.messageModel({
-      username: client.userData.user.username.toString(),
+      username: userData.user.username.toString(),
       text: text,
-      room: client.userData.room._id,
+      room: userData.room._id,
     });
 
     await newMessage.save();
 
-    await this.roomModel.findByIdAndUpdate(client.userData.room._id, {
+    await this.roomModel.findByIdAndUpdate(userData.room._id, {
       $addToSet: { messages: newMessage._id },
     });
-
-    console.log('here');
 
     const IMessageFrontend: IMessageFrontend = {
       text: newMessage.text,

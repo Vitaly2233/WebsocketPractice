@@ -36,8 +36,9 @@ const auth = new Vue({
       }
       const token = await response.json();
       if (token.statusCode === 404) return this.status('user is not found');
+      console.log('setting token');
       document.cookie = 'token=' + token.access_token;
-      interface.setInterface();
+      await interface.setInterface();
     },
 
     async register() {
@@ -75,8 +76,7 @@ const interface = new Vue({
   },
   methods: {
     async setInterface() {
-      if (!socket) {
-        console.log('socket');
+      if (!socket?.connected) {
         socket = await io('http://localhost:8080/');
         setSocket();
       }
@@ -95,13 +95,13 @@ const interface = new Vue({
     },
 
     async openChat(mouse) {
+      console.log('chat is opened');
       document.cookie = 'currentRoom=' + mouse.path[0].className;
-      await socket.emit('connectToTheRoom');
-      room.openChat();
+      console.log('cookies on oppening chats', document.cookie);
+      socket.emit('connectToTheRoom');
     },
 
     async getChats(chats) {
-      console.log(chats);
       // buttons with rooms
       $('#chats').remove();
       for (const chat of chats) {
@@ -109,7 +109,6 @@ const interface = new Vue({
 
         const newButton = document.createElement('button');
         newButton.id = 'chats';
-        console.log(roomData.id);
         newButton.className = `${roomData.id}`;
         newButton.innerHTML = roomName + ': ' + roomData.unread;
         newButton.addEventListener('click', this.openChat);
@@ -141,7 +140,6 @@ const room = new Vue({
 
     sendMessage() {
       if (this.validateInput()) {
-        console.log(this.text);
         socket.emit('sendMessage', this.text);
         this.text = '';
       }
@@ -154,7 +152,10 @@ const room = new Vue({
     },
 
     closeChat() {
-      deleteCookie('currentRoom');
+      console.log('deleting cookie');
+      console.log(document.cookie);
+      delete_cookie('currentRoom', '', '');
+      console.log(document.cookie);
       socket.emit('closeRoom');
       interface.setInterface();
     },
@@ -175,20 +176,7 @@ const room = new Vue({
 //       });
 //     },
 //   },
-// });
-
-function getCookie(name) {
-  var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
-  return v ? v[2] : null;
-}
-function setCookie(name, value, days) {
-  var d = new Date();
-  d.setTime(d.getTime() + 24 * 60 * 60 * 1000 * days);
-  document.cookie = name + '=' + value + ';path=/;expires=' + d.toGMTString();
-}
-function deleteCookie(name) {
-  setCookie(name, '', -1);
-}
+// })
 
 const setSocket = () => {
   socket.on('connect', () => {
@@ -200,8 +188,8 @@ const setSocket = () => {
     auth.setAuth();
   });
 
-  socket.on('getUserRooms', (data) => {
-    interface.getChats(data);
+  socket.on('getUserRooms', async (data) => {
+    await interface.getChats(data);
   });
 
   socket.on('getAllMessages', (messages) => {
@@ -209,11 +197,17 @@ const setSocket = () => {
     messages.forEach((element) => {
       room.receivedMessage(element);
     });
+    room.openChat();
   });
 
   socket.on('getUsername', (username) => {
+    console.log('gotted username');
     if (!username) auth.setAuth();
     interface.username = username;
+  });
+
+  socket.on('getParticipants', (participants) => {
+    room.participants = participants.join();
   });
 
   socket.on('newError', (error) => {
@@ -230,3 +224,20 @@ const setSocket = () => {
 
   return true;
 };
+
+function delete_cookie(name, path, domain) {
+  if (get_cookie(name)) {
+    document.cookie =
+      name +
+      '=' +
+      (path ? ';path=' + path : '') +
+      (domain ? ';domain=' + domain : '') +
+      ';expires=Thu, 01 Jan 1970 00:00:01 GMT';
+  }
+}
+
+function get_cookie(name) {
+  return document.cookie.split(';').some((c) => {
+    return c.trim().startsWith(name + '=');
+  });
+}

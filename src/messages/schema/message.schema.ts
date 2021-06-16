@@ -16,8 +16,3 @@ export class Message {
 }
 
 export const MessageSchema = SchemaFactory.createForClass(Message);
-
-MessageSchema.pre('save', function (next) {
-  console.log('saving');
-  next();
-});
