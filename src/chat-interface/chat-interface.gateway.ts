@@ -97,20 +97,31 @@ export class ChatInterfaceGateWay
         client.userData.room,
       );
     client.emit('getParticipants', participants);
-    await client.join(room._id);
+
+    await client.join(room._id.toString(), () => {
+      console.log('client rooms after adding', client.rooms);
+    });
 
     return client.emit<IMessageFrontend>('getAllMessages', messages);
   }
 
+  @UseGuards(TokenGuard, CurrentRoomGuard)
   @SubscribeMessage('closeRoom')
   async closeRoom(@ConnectedSocket() client: ISocketClient) {
-    console.log('closing a room');
+    await this.connectionSevice.changeUserStatusInRoom(
+      client.userData.user._id,
+      client.userData.room,
+      false,
+    );
+
+    await client.leave(client.userData.room._id.toString(), () => {
+      console.log('client rooms after leaving', client.rooms);
+      client.emit('closeRoom');
+    });
   }
 
   @SubscribeMessage('getUsername')
   getUsername(@ConnectedSocket() client: ISocketClient): string {
-    console.log('get username is called');
-
     return client.emit<string>('getUsername', client.userData.user.username);
   }
 

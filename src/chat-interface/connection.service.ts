@@ -63,14 +63,6 @@ export class ConnectionService {
     });
 
     if (!user) {
-      client.emit('newError', {
-        error: 'error',
-        message: 'there is no user with the data',
-      });
-      return client.disconnect();
-    }
-
-    if (!user) {
       console.log('74');
 
       client.emit('newError', {
@@ -89,15 +81,13 @@ export class ConnectionService {
     }
 
     this.activeConnected[user._id] = client.id.toString();
-    console.log(
-      'user is connected and new list is like: ',
-      this.activeConnected,
-    );
+    console.log('active connected are: ', this.activeConnected);
   }
 
   async deleteActiveConnected(client: ISocketClient) {
     const cookie = client.handshake.headers.cookie;
     const token = getCookieValueByName(cookie, 'token');
+    const currentRoom = getCookieValueByName(cookie, 'currentRoom');
 
     let user: UserDocument;
     try {
@@ -107,16 +97,21 @@ export class ConnectionService {
         username: username,
       });
     } catch (e) {}
+    if (!user) return;
 
-    delete this.activeConnected[user?._id];
+    delete this.activeConnected[user._id];
     console.log(
       'user is disconnected and connected list now is: ',
       this.activeConnected,
     );
+
+    if (currentRoom) {
+      const room: RoomDocument = await this.roomModel.findById(currentRoom);
+      await this.changeUserStatusInRoom(user._id, room, false);
+    }
   }
 
   async connectToTheRoom(userData: IUserData, room: RoomDocument) {
-    // here is an error with _id
     await this.removeUserUnread(userData.user, room._id);
     await this.changeUserStatusInRoom(userData.user._id, userData.room, true);
   }
@@ -133,13 +128,12 @@ export class ConnectionService {
     user.save();
   }
 
-  private async changeUserStatusInRoom(
+  async changeUserStatusInRoom(
     userId: string,
     room: RoomDocument,
     status: boolean,
   ) {
     let index = 0;
-
     for (const participant of room.isOnline) {
       if (participant.user.toString() == userId.toString()) {
         room.isOnline[index].status = status;

@@ -13,10 +13,9 @@ export class CurrentRoomGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const client: ISocketClient = context?.switchToWs()?.getClient();
     const cookie = client?.handshake?.headers?.cookie;
-    console.log('cookie in current room', cookie);
 
     const roomId = getCookieValueByName(cookie, 'currentRoom');
-    console.log('roomId from cookie in current-room guard: ', roomId);
+    console.log('roomId from cookie in current-room guard: ', !!roomId);
     if (!roomId) return throwError(client);
 
     await this.roomModel.findById(roomId).then((data) => {
@@ -24,7 +23,7 @@ export class CurrentRoomGuard implements CanActivate {
       client.userData.room = data;
     });
 
-    console.log(client.userData.room);
+    console.log('current room: ', !!client.userData.room);
 
     return true;
   }

@@ -10,7 +10,10 @@ export interface ISocketClient {
     };
   };
   id: string;
-  join(value: string): Promise<void>;
+
+  join(value: string, callback?: Function): Promise<void>;
+
+  leave(roomName: string, callback?: Function): Promise<void>;
 
   rooms: any;
 

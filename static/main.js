@@ -77,6 +77,7 @@ const interface = new Vue({
   methods: {
     async setInterface() {
       if (!socket?.connected) {
+        console.log('HERE');
         socket = await io('http://localhost:8080/');
         setSocket();
       }
@@ -152,12 +153,7 @@ const room = new Vue({
     },
 
     closeChat() {
-      console.log('deleting cookie');
-      console.log(document.cookie);
-      delete_cookie('currentRoom', '', '');
-      console.log(document.cookie);
       socket.emit('closeRoom');
-      interface.setInterface();
     },
   },
 });
@@ -201,13 +197,17 @@ const setSocket = () => {
   });
 
   socket.on('getUsername', (username) => {
-    console.log('gotted username');
     if (!username) auth.setAuth();
     interface.username = username;
   });
 
   socket.on('getParticipants', (participants) => {
     room.participants = participants.join();
+  });
+
+  socket.on('closeRoom', () => {
+    delete_cookie('currentRoom', '', '');
+    interface.setInterface();
   });
 
   socket.on('newError', (error) => {
@@ -217,7 +217,7 @@ const setSocket = () => {
   socket.on('newMessage', (message) => {
     console.log('got new message', message);
     if (document.getElementById('interface').hidden) {
-      room.receivedMessage(message);
+      return room.receivedMessage(message);
     }
     socket.emit('getUserRooms');
   });

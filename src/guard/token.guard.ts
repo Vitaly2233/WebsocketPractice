@@ -31,7 +31,7 @@ export class TokenGuard implements CanActivate {
       getCookieValueByName(cookie, 'token'),
     ]);
     const token = tokens[0];
-    console.log('token in guard', token);
+    console.log('token in guard', !!token);
 
     const verifiedData: ITokenData = await this.jwtService.verify(token);
 

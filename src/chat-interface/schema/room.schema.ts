@@ -47,5 +47,5 @@ export class Room {
 export const RoomSchema = SchemaFactory.createForClass(Room);
 
 RoomSchema.post('save', (error, next, data) => {
-  if (error) console.log('error occured');
+  if (error) console.log('error occured in room saving');
 });
