@@ -133,6 +133,7 @@ export class ConnectionService {
     room: RoomDocument,
     status: boolean,
   ) {
+    if (!room) return false;
     let index = 0;
     for (const participant of room.isOnline) {
       if (participant.user.toString() == userId.toString()) {

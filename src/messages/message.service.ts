@@ -89,9 +89,6 @@ export class MessageService {
         await this.userModel.findByIdAndUpdate(participant.user, {
           $inc: { ['unread.' + client.userData.room._id]: 1 },
         });
-        const userModel: UserDocument = await this.userModel.findById(
-          participant.user,
-        );
       }
       server
         .to(activeConnected[participant.user.toString()])

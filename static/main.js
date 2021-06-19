@@ -77,7 +77,6 @@ const interface = new Vue({
   methods: {
     async setInterface() {
       if (!socket?.connected) {
-        console.log('HERE');
         socket = await io('http://localhost:8080/');
         setSocket();
       }
@@ -111,7 +110,7 @@ const interface = new Vue({
         const newButton = document.createElement('button');
         newButton.id = 'chats';
         newButton.className = `${roomData.id}`;
-        newButton.innerHTML = roomName + ': ' + roomData.unread;
+        newButton.innerHTML = roomName + ': unread messages ' + roomData.unread;
         newButton.addEventListener('click', this.openChat);
         document.body.appendChild(newButton);
       }

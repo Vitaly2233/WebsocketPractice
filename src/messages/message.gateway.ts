@@ -58,6 +58,5 @@ export class MessageGateway {
       activeConnected,
       messageFronted,
     );
-    console.log('HERE');
   }
 }
