@@ -1,45 +1,44 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { ConnectedSocket, WsException } from '@nestjs/websockets';
-import { Model, ObjectId } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import * as mongoose from 'mongoose';
-import { User, UserDocument } from 'src/auth/Schema/user.schema';
-import { ISocketClient } from 'src/chat-interface/interface/socket-client';
+import { User, UserDocument } from 'src/user/Schema/user.schema';
+import { ISocketClient } from 'src/common/interface/socket-client';
 import { IMessageFrontend } from './interface/message-frontend';
 import { MessageDocument } from './schema/message.schema';
-import { isOnline, RoomDocument } from 'src/chat-interface/schema/room.schema';
+import { isOnline, RoomDocument } from 'src/room/schema/room.schema';
 import { ConnectionService } from 'src/connection/connection.service';
 import { IUserData } from 'src/chat-interface/dto/user-data.dto';
+import { UserService } from 'src/user/user.service';
+import { ObjectID } from 'mongodb';
 
 @Injectable()
 export class MessageService {
   constructor(
     @InjectModel('message') private messageModel: Model<MessageDocument>,
     @InjectModel('room') private roomModel: Model<RoomDocument>,
-    @InjectModel('user') private userModel: Model<UserDocument>,
+    private userService: UserService,
   ) {}
 
   async saveMessage(
-    userData: IUserData,
+    username: string,
+    roomId: string | Types._ObjectId,
     text: string,
   ): Promise<IMessageFrontend> {
     const newMessage = new this.messageModel({
-      username: userData.user.username.toString(),
-      text: text,
-      room: userData.room._id,
+      username,
+      text,
+      room: roomId,
     });
-
     await newMessage.save();
-
-    await this.roomModel.findByIdAndUpdate(userData.room._id, {
+    await this.roomModel.findByIdAndUpdate(roomId, {
       $addToSet: { messages: newMessage._id },
     });
-
     const IMessageFrontend: IMessageFrontend = {
       text: newMessage.text,
       username: newMessage.username,
     };
-
     return IMessageFrontend;
   }
 
@@ -84,7 +83,7 @@ export class MessageService {
         !activeConnected[participant.user.toString()] ||
         !participant.status
       ) {
-        await this.userModel.findByIdAndUpdate(participant.user, {
+        await this.userService.updateUser(participant.user, {
           $inc: { ['unread.' + client.userData.room._id]: 1 },
         });
       }

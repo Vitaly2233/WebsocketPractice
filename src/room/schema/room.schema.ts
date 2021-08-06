@@ -1,19 +1,21 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import * as mongoose from 'mongoose';
-import { User, UserDocument } from 'src/auth/Schema/user.schema';
+import { Types, Document } from 'mongoose';
+import { User, UserDocument } from 'src/user/Schema/user.schema';
 import { Message } from 'src/messages/schema/message.schema';
 
-export type RoomDocument = Room & mongoose.Document;
+export type RoomDocument = Room & Document;
 
 export interface isOnline {
-  user?: mongoose.PopulatedDoc<User | mongoose.Schema.Types.ObjectId | string>;
+  user?: User | Types._ObjectId;
   status?: boolean;
 }
 
 @Schema()
 export class Room {
+  _id: Types._ObjectId | string;
+
   @Prop({
-    type: mongoose.Schema.Types.String,
+    type: String,
     required: true,
     default: 'myRoom',
   })
@@ -21,13 +23,11 @@ export class Room {
 
   @Prop({
     default: [],
-    type: [{ type: mongoose.Schema.Types.ObjectId }],
+    type: [{ type: Types._ObjectId }],
     required: true,
     ref: 'user',
   })
-  participants: mongoose.PopulatedDoc<
-    UserDocument | mongoose.Schema.Types.ObjectId
-  >[];
+  participants: User[] | Types._ObjectId[];
 
   @Prop({
     default: [],
@@ -37,11 +37,11 @@ export class Room {
   isOnline: isOnline[];
 
   @Prop({
-    type: [{ type: mongoose.Schema.Types.ObjectId }],
+    type: [{ type: Types._ObjectId }],
     ref: 'message',
     default: [],
   })
-  messages: mongoose.PopulatedDoc<Message | mongoose.Schema.Types.ObjectId>[];
+  messages: Message[] | Types._ObjectId[];
 }
 
 export const RoomSchema = SchemaFactory.createForClass(Room);

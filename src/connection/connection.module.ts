@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
-import { RoomSchema } from 'src/chat-interface/schema/room.schema';
+import { AuthModule } from 'src/auth/auth.module';
+import { RoomSchema } from 'src/room/schema/room.schema';
 import config from 'src/common/config';
+import { RoomModule } from 'src/room/room.module';
 import { UserModule } from 'src/user/user.module';
 import { ConnectionGateway } from './connection.gateway';
 import { ConnectionService } from './connection.service';
@@ -13,8 +15,9 @@ import { ConnectionService } from './connection.service';
       secret: config.JWT.SECRET,
       signOptions: { expiresIn: config.JWT.EXPIRES_IN },
     }),
-    MongooseModule.forFeature([{ name: 'room', schema: RoomSchema }]),
     UserModule,
+    AuthModule,
+    RoomModule,
   ],
   providers: [ConnectionService, ConnectionGateway],
   exports: [ConnectionService],

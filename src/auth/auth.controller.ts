@@ -17,7 +17,6 @@ export class AuthController {
   @Post('login')
   async login(@Body() body: LoginRequestDto): Promise<LoginResponseDto> {
     const { password, username } = body;
-    if (await this.authService.validateUsernameAndPassword(username, password))
-      return this.authService.login(username);
+    return this.authService.login(username, password);
   }
 }

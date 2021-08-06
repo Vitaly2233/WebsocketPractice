@@ -2,8 +2,8 @@ import { Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { Injectable } from '@nestjs/common';
 import config from 'src/common/config';
-import { getCookieValueByName } from 'src/helpers/get-cookie-value';
-import { ISocketClient } from 'src/chat-interface/interface/socket-client';
+import { getCookieValueByName } from 'src/common/helpers/get-cookie-value';
+import { ISocketClient } from 'src/common/interface/socket-client';
 import { ITokenData } from '../interface/token-data.interface';
 
 const cookieExtractor = function (client: ISocketClient) {

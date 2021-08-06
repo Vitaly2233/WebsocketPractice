@@ -8,7 +8,6 @@ import { JwtService } from '@nestjs/jwt';
 import { LoginResponseDto } from './dto/login-response.dto';
 import { ITokenData } from 'src/auth/interface/token-data.interface';
 import { UserService } from 'src/user/user.service';
-import { User } from './Schema/user.schema';
 
 @Injectable()
 export class AuthService {
@@ -28,7 +27,8 @@ export class AuthService {
     return userJson;
   }
 
-  async login(username: string) {
+  async login(username: string, password: string) {
+    await this.validateUsernameAndPassword(username, password);
     const tokenData: ITokenData = {
       username,
     };

@@ -1,9 +1,9 @@
 import { HttpException } from '@nestjs/common';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { IsString, Length } from 'class-validator';
-import * as mongoose from 'mongoose';
-import { IUserRoom } from 'src/chat-interface/interface/user-rooms.interface';
-import { Room } from 'src/chat-interface/schema/room.schema';
+import { Types, Document } from 'mongoose';
+import { IUserRoomResponse } from 'src/user/interface/user-rooms.interface';
+import { Room, RoomDocument } from 'src/room/schema/room.schema';
 
 type RoomId = string;
 type count = number;
@@ -12,6 +12,8 @@ export type UnreadMessage = Record<RoomId, count>;
 
 @Schema()
 export class User {
+  _id: Types._ObjectId | string;
+
   @IsString()
   @Length(4, 16)
   @Prop({ unique: true })
@@ -23,16 +25,16 @@ export class User {
   password: string;
 
   @Prop({
-    type: [{ type: mongoose.Schema.Types.ObjectId }],
+    type: [{ type: Types.ObjectId }],
     ref: 'room',
     default: [],
   })
-  rooms: mongoose.PopulatedDoc<IUserRoom | mongoose.ObjectId>[];
+  rooms: Room[] | Types._ObjectId[];
 
   @Prop({ default: {}, type: Object })
   unread: UnreadMessage;
 }
 
-export type UserDocument = User & mongoose.Document;
+export type UserDocument = User & Document;
 
 export const UserSchema = SchemaFactory.createForClass(User);

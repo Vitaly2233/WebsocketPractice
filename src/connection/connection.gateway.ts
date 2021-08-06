@@ -4,7 +4,7 @@ import {
   SubscribeMessage,
   WebSocketGateway,
 } from '@nestjs/websockets';
-import { ISocketClient } from 'src/chat-interface/interface/socket-client';
+import { ISocketClient } from 'src/common/interface/socket-client';
 import { ConnectionService } from './connection.service';
 
 @WebSocketGateway()

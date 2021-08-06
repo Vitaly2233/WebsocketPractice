@@ -1,6 +1,6 @@
-import { UserDocument } from 'src/auth/Schema/user.schema';
-import { RoomDocument } from '../schema/room.schema';
-import { IUserData } from '../dto/user-data.dto';
+import { UserDocument } from 'src/user/Schema/user.schema';
+import { RoomDocument } from '../../room/schema/room.schema';
+import { IUserData } from '../../chat-interface/dto/user-data.dto';
 
 export interface ISocketClient {
   userData: IUserData;

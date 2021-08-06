@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import * as mongoose from 'mongoose';
+import { Types, Document } from 'mongoose';
 
-export type MessageDocument = Message & mongoose.Document;
+export type MessageDocument = Message & Document;
 
 @Schema()
 export class Message {
@@ -11,7 +11,7 @@ export class Message {
   @Prop({ required: true })
   text: string;
 
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'room', required: true })
+  @Prop({ type: Types._ObjectId, ref: 'room', required: true })
   room: string;
 }
 

@@ -2,9 +2,9 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { ISocketClient } from 'src/chat-interface/interface/socket-client';
-import { getCookieValueByName } from 'src/helpers/get-cookie-value';
-import { RoomDocument } from 'src/chat-interface/schema/room.schema';
+import { ISocketClient } from 'src/common/interface/socket-client';
+import { getCookieValueByName } from 'src/common/helpers/get-cookie-value';
+import { RoomDocument } from 'src/room/schema/room.schema';
 
 @Injectable()
 export class CurrentRoomGuard implements CanActivate {
