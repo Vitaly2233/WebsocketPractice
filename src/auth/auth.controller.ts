@@ -1,28 +1,23 @@
-import {
-  Body,
-  Controller,
-  HttpException,
-  Post,
-  UseInterceptors,
-} from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { AuthDto } from './dto/register.dto';
-import { JwtTokenDto } from './dto/token.dto';
-import { RemovePasswordInterceptor } from './interceptor/remove-password.interceptor';
-import { User, UserDocument } from './Schema/user.schema';
+import { LoginRequestDto } from './dto/login-request.dto';
+import { RegisterRequestDto } from './dto/register-request.dto';
+import { LoginResponseDto } from './dto/login-response.dto';
 
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  @UseInterceptors(RemovePasswordInterceptor)
   @Post('registration')
-  register(@Body() body: AuthDto): Promise<UserDocument> {
-    return this.authService.register(body);
+  async register(@Body() body: RegisterRequestDto) {
+    const { password, username } = body;
+    return await this.authService.register(username, password);
   }
 
   @Post('login')
-  login(@Body() body: AuthDto): Promise<JwtTokenDto | HttpException> {
-    return this.authService.login(body);
+  async login(@Body() body: LoginRequestDto): Promise<LoginResponseDto> {
+    const { password, username } = body;
+    if (await this.authService.validateUsernameAndPassword(username, password))
+      return this.authService.login(username);
   }
 }

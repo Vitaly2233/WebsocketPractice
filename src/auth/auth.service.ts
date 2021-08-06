@@ -1,51 +1,58 @@
-import { HttpException, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { User, UserDocument } from './Schema/user.schema';
 import { JwtService } from '@nestjs/jwt';
-import { JwtTokenDto } from './dto/token.dto';
-import { ITokenData } from 'src/auth/dto/token-data';
+import { LoginResponseDto } from './dto/login-response.dto';
+import { ITokenData } from 'src/auth/interface/token-data.interface';
+import { UserService } from 'src/user/user.service';
+import { User } from './Schema/user.schema';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectModel('user') private userModel: Model<UserDocument>,
+    private userService: UserService,
     private jwtService: JwtService,
   ) {}
 
-  async register(payload: { username: string; password: string }) {
-    const { username, password } = payload;
+  async register(username: string, password: string) {
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser: UserDocument = new this.userModel({
-      username: username,
+    const user = await this.userService.create({
+      username,
       password: hashedPassword,
     });
-    await newUser.save();
-    return newUser;
+    const userJson = user.toJSON();
+    delete userJson.password;
+    return userJson;
   }
 
-  async login(body: {
-    username: string;
-    password: string;
-  }): Promise<HttpException | JwtTokenDto> {
-    const { username, password } = body;
-    const user = await this.userModel.findOne({
-      username: username,
-    });
-    if (!user)
-      throw new HttpException("invalid username, or user doesn't exist", 404);
-
-    const isEqual: boolean = await bcrypt.compare(password, user.password);
-    if (!isEqual) throw new HttpException('wrong password', 404);
+  async login(username: string) {
     const tokenData: ITokenData = {
-      username: username,
+      username,
     };
-    const token: string = this.jwtService.sign(tokenData);
-    const payload: JwtTokenDto = {
-      access_token: token,
+    const payload: LoginResponseDto = {
+      access_token: this.jwtService.sign(tokenData),
     };
 
     return payload;
+  }
+
+  async validateUsernameAndPassword(username: string, password: string) {
+    const user = await this.userService.findOneByUsername(username);
+    if (!user) throw new NotFoundException('user does not exist');
+
+    const isEqual: boolean = await bcrypt.compare(password, user.password);
+    if (!isEqual) throw new ForbiddenException('wrong password');
+
+    return user.toJSON();
+  }
+
+  async validateUsername(username: string) {
+    const user = await this.userService.findOneByUsername(username);
+    if (!user) throw new NotFoundException('user does not exist');
+
+    return user;
   }
 }

@@ -1,15 +1,14 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
-import { WsException } from '@nestjs/websockets';
 import { Model, Schema } from 'mongoose';
 import { UserDocument } from 'src/auth/Schema/user.schema';
 import { getCookieValueByName } from 'src/helpers/get-cookie-value';
-import { MessageService } from 'src/messages/message.service';
-import { ISocketClient } from './interface/socket-client';
-import { ITokenData } from '../auth/dto/token-data';
-import { RoomDocument } from './schema/room.schema';
-import { IUserData } from './dto/user-data.dto';
+import { ISocketClient } from '../chat-interface/interface/socket-client';
+import { ITokenData } from '../auth/interface/token-data.interface';
+import { RoomDocument } from '../chat-interface/schema/room.schema';
+import { IUserData } from '../chat-interface/dto/user-data.dto';
+import { UserService } from 'src/user/user.service';
 
 @Injectable()
 export class ConnectionService {
@@ -17,9 +16,7 @@ export class ConnectionService {
 
   constructor(
     private jwtService: JwtService,
-    @Inject(forwardRef(() => MessageService))
-    private messageSrvice: MessageService,
-    @InjectModel('user') private userModel: Model<UserDocument>,
+    private userService: UserService,
     @InjectModel('room') private roomModel: Model<RoomDocument>,
   ) {}
 
@@ -58,9 +55,9 @@ export class ConnectionService {
       return client.disconnect();
     }
 
-    const user: UserDocument = await this.userModel.findOne({
-      username: username,
-    });
+    const user: UserDocument = await this.userService.findOneByUsername(
+      username,
+    );
 
     if (!user) {
       console.log('74');
@@ -93,9 +90,7 @@ export class ConnectionService {
     try {
       const verifiedData: ITokenData = await this.jwtService.verify(token);
       const { username } = verifiedData;
-      user = await this.userModel.findOne({
-        username: username,
-      });
+      user = await this.userService.findOneByUsername(username);
     } catch (e) {}
     if (!user) return;
 
@@ -121,8 +116,6 @@ export class ConnectionService {
     user: UserDocument,
     roomId: string | Schema.Types.ObjectId,
   ) {
-    console.log(user.unread[roomId.toString()]);
-
     user.unread[roomId.toString()] = 0;
     user.markModified('unread');
     user.save();

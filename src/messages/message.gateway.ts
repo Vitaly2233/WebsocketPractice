@@ -10,10 +10,10 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { UseGuards, UseInterceptors } from '@nestjs/common';
 import { ISocketClient } from '../chat-interface/interface/socket-client';
-import { TokenGuard } from 'src/guard/token.guard';
+// import { TokenGuard } from 'src/auth/guard/jwt.guard';
 import { MessageService } from './message.service';
 import { ExceptionInterceptor } from '../interceptor/exception.interceptor';
-import { ConnectionService } from 'src/chat-interface/connection.service';
+import { ConnectionService } from 'src/connection/connection.service';
 import { IMessageFrontend } from './interface/message-frontend';
 import { UserDocument } from 'src/auth/Schema/user.schema';
 import { CurrentRoomGuard } from 'src/guard/current-room.guard';
@@ -21,7 +21,7 @@ import { RoomDocument } from 'src/chat-interface/schema/room.schema';
 import { MessageDocument } from './schema/message.schema';
 
 @WebSocketGateway()
-@UseGuards(TokenGuard, CurrentRoomGuard)
+@UseGuards(CurrentRoomGuard)
 @UseInterceptors(ExceptionInterceptor)
 export class MessageGateway {
   constructor(

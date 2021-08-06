@@ -5,7 +5,7 @@ import { Model, ObjectId } from 'mongoose';
 import * as mongoose from 'mongoose';
 import { UserDocument } from 'src/auth/Schema/user.schema';
 // import { ICreateRoomRes } from 'src/mongoose-help/interface/create-room.interface';
-import { ConnectionService } from './connection.service';
+import { ConnectionService } from '../connection/connection.service';
 import { ISocketClient } from './interface/socket-client';
 import { RoomDocument } from './schema/room.schema';
 import { IUserRoom } from './interface/user-rooms.interface';

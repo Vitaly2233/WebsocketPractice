@@ -8,7 +8,7 @@ import { ISocketClient } from 'src/chat-interface/interface/socket-client';
 import { IMessageFrontend } from './interface/message-frontend';
 import { MessageDocument } from './schema/message.schema';
 import { isOnline, RoomDocument } from 'src/chat-interface/schema/room.schema';
-import { ConnectionService } from 'src/chat-interface/connection.service';
+import { ConnectionService } from 'src/connection/connection.service';
 import { IUserData } from 'src/chat-interface/dto/user-data.dto';
 
 @Injectable()
@@ -17,8 +17,6 @@ export class MessageService {
     @InjectModel('message') private messageModel: Model<MessageDocument>,
     @InjectModel('room') private roomModel: Model<RoomDocument>,
     @InjectModel('user') private userModel: Model<UserDocument>,
-    @Inject(forwardRef(() => ConnectionService))
-    private connectionService: ConnectionService,
   ) {}
 
   async saveMessage(

@@ -2,8 +2,6 @@ import { UseGuards, UseInterceptors } from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
-  OnGatewayConnection,
-  OnGatewayDisconnect,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
@@ -12,9 +10,8 @@ import {
 import { ISocketClient } from 'src/chat-interface/interface/socket-client';
 import { ExceptionInterceptor } from 'src/interceptor/exception.interceptor';
 import { MessageService } from 'src/messages/message.service';
-import { TokenGuard } from 'src/guard/token.guard';
 import { ChatInterfaceService } from './chat-interface.service';
-import { ConnectionService } from './connection.service';
+import { ConnectionService } from '../connection/connection.service';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { IUserRoom } from './interface/user-rooms.interface';
 import { IMessageFrontend } from 'src/messages/interface/message-frontend';
@@ -24,13 +21,12 @@ import { UserDocument } from 'src/auth/Schema/user.schema';
 import { RoomDocument } from './schema/room.schema';
 import { Model } from 'mongoose';
 import { MessageDocument } from 'src/messages/schema/message.schema';
+import { JwtAuthGuard } from 'src/auth/guard/jwt.guard';
 
 @WebSocketGateway()
-@UseGuards(TokenGuard)
+@UseGuards(JwtAuthGuard)
 @UseInterceptors(ExceptionInterceptor)
-export class ChatInterfaceGateWay
-  implements OnGatewayConnection, OnGatewayDisconnect
-{
+export class ChatInterfaceGateWay {
   constructor(
     private connectionSevice: ConnectionService,
     private chatInterfaceService: ChatInterfaceService,
@@ -42,13 +38,6 @@ export class ChatInterfaceGateWay
   ) {}
 
   @WebSocketServer() server;
-
-  async handleConnection(client: ISocketClient) {
-    return await this.connectionSevice.handleConnection(client);
-  }
-  async handleDisconnect(client: ISocketClient) {
-    return await this.connectionSevice.deleteActiveConnected(client);
-  }
 
   @SubscribeMessage('getUserRooms')
   async getUserRooms(@ConnectedSocket() client: ISocketClient) {
@@ -105,7 +94,7 @@ export class ChatInterfaceGateWay
     return client.emit<IMessageFrontend>('getAllMessages', messages);
   }
 
-  @UseGuards(TokenGuard, CurrentRoomGuard)
+  @UseGuards(CurrentRoomGuard)
   @SubscribeMessage('closeRoom')
   async closeRoom(@ConnectedSocket() client: ISocketClient) {
     await this.connectionSevice.changeUserStatusInRoom(
@@ -125,6 +114,7 @@ export class ChatInterfaceGateWay
     return client.emit<string>('getUsername', client.userData.user.username);
   }
 
+  @SubscribeMessage('deleteServerData')
   async deleteServerData() {
     await this.userModel.deleteMany({});
     await this.roomModel.deleteMany({});
