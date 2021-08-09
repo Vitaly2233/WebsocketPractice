@@ -1,39 +1,24 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
 import { ISocketClient } from 'src/common/interface/socket-client';
 import { getCookieValueByName } from 'src/common/helpers/get-cookie-value';
-import { RoomDocument } from 'src/room/schema/room.schema';
+import { RoomService } from 'src/room/room.service';
+import { WsException } from '@nestjs/websockets';
 
 @Injectable()
 export class CurrentRoomGuard implements CanActivate {
-  constructor(@InjectModel('room') private roomModel: Model<RoomDocument>) {}
+  constructor(private roomService: RoomService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const client: ISocketClient = context?.switchToWs()?.getClient();
     const cookie = client?.handshake?.headers?.cookie;
-
     const roomId = getCookieValueByName(cookie, 'currentRoom');
-    console.log('roomId from cookie in current-room guard: ', !!roomId);
-    if (!roomId) return throwError(client);
 
-    await this.roomModel.findById(roomId).then((data) => {
-      // @ts-ignore
-      client.userData.room = data;
-    });
+    if (!roomId) throw new WsException(`room id is missing in cookies`);
 
-    console.log('current room: ', !!client.userData.room);
+    client.userData.room = await this.roomService.findById(roomId);
+
+    console.log('current room: ', client.userData.room._id);
 
     return true;
   }
-}
-
-function throwError(client: ISocketClient): boolean {
-  client.emit('newError', {
-    error: 'error',
-    message: 'current room is missing',
-  });
-  client.disconnect();
-  return false;
 }

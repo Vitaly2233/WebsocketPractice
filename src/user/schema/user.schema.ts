@@ -2,6 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { IsString, Length } from 'class-validator';
 import { Types, Document } from 'mongoose';
 import { Room } from 'src/room/schema/room.schema';
+import * as mongoose from 'mongoose';
 
 type RoomId = string;
 type count = number;
@@ -23,7 +24,7 @@ export class User {
   password: string;
 
   @Prop({
-    type: [{ type: Types.ObjectId }],
+    type: [{ type: mongoose.Schema.Types.ObjectId }],
     ref: 'room',
     default: [],
   })

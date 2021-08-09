@@ -2,23 +2,21 @@ import { Module, forwardRef } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { MessageGateway } from './message.gateway';
 import { MessageSchema } from './schema/message.schema';
-import { RoomSchema } from '../room/schema/room.schema';
 import { MessageService } from './message.service';
 import { AuthModule } from 'src/auth/auth.module';
-import { ConnectionService } from 'src/connection/connection.service';
 import { UserModule } from 'src/user/user.module';
+import { ConnectionModule } from 'src/connection/connection.module';
+import { RoomModule } from 'src/room/room.module';
 
 @Module({
-  providers: [MessageGateway, MessageService],
   imports: [
-    MongooseModule.forFeature([
-      { name: 'message', schema: MessageSchema },
-      { name: 'room', schema: RoomSchema },
-    ]),
+    MongooseModule.forFeature([{ name: 'message', schema: MessageSchema }]),
+    forwardRef(() => RoomModule),
     AuthModule,
     UserModule,
-    ConnectionService,
+    ConnectionModule,
   ],
+  providers: [MessageGateway, MessageService],
   exports: [MessageService],
 })
 export class MessageModule {}

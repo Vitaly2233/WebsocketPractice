@@ -8,12 +8,13 @@ import { IMessageResponse } from './interface/message-frontend';
 import { Message, MessageDocument } from './schema/message.schema';
 import { RoomDocument } from 'src/room/schema/room.schema';
 import { UserService } from 'src/user/user.service';
+import { RoomService } from 'src/room/room.service';
 
 @Injectable()
 export class MessageService {
   constructor(
     @InjectModel('message') private messageModel: Model<MessageDocument>,
-    @InjectModel('room') private roomModel: Model<RoomDocument>,
+    private roomService: RoomService,
     private userService: UserService,
   ) {}
 
@@ -28,9 +29,12 @@ export class MessageService {
       room: roomId,
     });
     await newMessage.save();
-    await this.roomModel.findByIdAndUpdate(roomId, {
-      $addToSet: { messages: newMessage._id },
-    });
+    await this.roomService.updateOne(
+      { _id: roomId },
+      {
+        $addToSet: { messages: newMessage._id },
+      },
+    );
     const IMessageResponse: IMessageResponse = {
       text: newMessage.text,
       username: newMessage.username,

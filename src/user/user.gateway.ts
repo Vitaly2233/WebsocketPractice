@@ -5,7 +5,7 @@ import {
   WebSocketGateway,
 } from '@nestjs/websockets';
 import { ISocketClient } from 'src/common/interface/socket-client';
-import { JwtAuthGuard } from 'src/auth/guard/jwt.guard';
+import { JwtAuthGuard } from 'src/common/guard/jwt.guard';
 import { RoomService } from 'src/room/room.service';
 import { UserService } from './user.service';
 

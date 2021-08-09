@@ -19,13 +19,13 @@ export class RoomGateway {
   @SubscribeMessage('connectToTheRoom')
   async connectToTheRoom(@ConnectedSocket() client: ISocketClient) {
     const room = client.userData.room;
-    await this.roomServie.connectToTheRoom(client.userData.user, room, client);
+    await this.roomServie.connect(client.userData.user, room, client);
   }
 
   @SubscribeMessage('closeRoom')
   @UseGuards(CurrentRoomGuard)
   async closeRoom(@ConnectedSocket() client: ISocketClient) {
-    return this.roomServie.closeRoom(
+    return this.roomServie.close(
       client,
       client.userData.user._id,
       client.userData.room._id,
@@ -40,7 +40,7 @@ export class RoomGateway {
     @MessageBody() body: CreateRoomDto,
   ) {
     body.participantUsernames.push(client.userData.user.username);
-    return this.roomServie.createRoom(
+    return this.roomServie.create(
       body.roomName,
       body.participantUsernames,
       this.server,

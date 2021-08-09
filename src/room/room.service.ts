@@ -1,7 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { WsException } from '@nestjs/websockets';
-import { Types, Model } from 'mongoose';
+import { Types, Model, UpdateQuery, FilterQuery } from 'mongoose';
 import { User, UserDocument } from 'src/user/schema/user.schema';
 import { ISocketClient } from 'src/common/interface/socket-client';
 import { Room, RoomDocument } from 'src/room/schema/room.schema';
@@ -13,12 +13,14 @@ import { MessageService } from 'src/messages/message.service';
 export class RoomService {
   constructor(
     private userService: UserService,
+    @Inject(forwardRef(() => MessageService))
     private messageService: MessageService,
+    @Inject(forwardRef(() => ConnectionService))
     private connectionService: ConnectionService,
     @InjectModel('room') private roomModel: Model<RoomDocument>,
   ) {}
 
-  async createRoom(
+  async create(
     roomName: string,
     participantUsernames: string[],
     server: ISocketClient,
@@ -59,11 +61,14 @@ export class RoomService {
     return await this.roomModel.findById(_id);
   }
 
-  async connectToTheRoom(
-    user: UserDocument,
-    room: RoomDocument,
-    client: ISocketClient,
+  async updateOne(
+    filter?: FilterQuery<RoomDocument>,
+    update?: UpdateQuery<RoomDocument>,
   ) {
+    this.roomModel.updateOne(filter, update);
+  }
+
+  async connect(user: UserDocument, room: RoomDocument, client: ISocketClient) {
     await this.userService.removeUnreads(user, room._id);
     await this.changeUserStatus(user._id, room, true);
 
@@ -83,7 +88,7 @@ export class RoomService {
     return client.emit('getAllMessages', messages);
   }
 
-  async closeRoom(
+  async close(
     client: ISocketClient,
     userId: string | Types._ObjectId,
     currentRoomId: string | Types._ObjectId,
@@ -105,7 +110,7 @@ export class RoomService {
     return usernames;
   }
 
-  async changeUserStatus(
+  private async changeUserStatus(
     userId: string | Types._ObjectId,
     room: RoomDocument,
     status: boolean,

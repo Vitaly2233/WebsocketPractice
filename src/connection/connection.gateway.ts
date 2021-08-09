@@ -14,9 +14,9 @@ export class ConnectionGateway
   constructor(private connectionService: ConnectionService) {}
 
   async handleConnection(client: ISocketClient) {
-    return await this.connectionService.handleConnection(client);
+    // return await this.connectionService.handleConnection(client);
   }
   async handleDisconnect(client: ISocketClient) {
-    return await this.connectionService.deleteActiveConnected(client);
+    // return await this.connectionService.deleteActiveConnected(client);
   }
 }

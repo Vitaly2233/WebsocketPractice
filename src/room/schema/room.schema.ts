@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types, Document } from 'mongoose';
-import { User, UserDocument } from 'src/user/schema/user.schema';
+import * as mongoose from 'mongoose';
+import { User } from 'src/user/schema/user.schema';
 import { Message } from 'src/messages/schema/message.schema';
 
 export type RoomDocument = Room & Document;
@@ -17,13 +18,12 @@ export class Room {
   @Prop({
     type: String,
     required: true,
-    default: 'myRoom',
   })
   roomName: string;
 
   @Prop({
     default: [],
-    type: [{ type: Types._ObjectId }],
+    type: [{ type: mongoose.Schema.Types.ObjectId }],
     required: true,
     ref: 'user',
   })
@@ -37,7 +37,7 @@ export class Room {
   isOnline: isOnline[];
 
   @Prop({
-    type: [{ type: Types._ObjectId }],
+    type: [{ type: mongoose.Schema.Types.ObjectId }],
     ref: 'message',
     default: [],
   })
@@ -45,7 +45,3 @@ export class Room {
 }
 
 export const RoomSchema = SchemaFactory.createForClass(Room);
-
-RoomSchema.post('save', (error, next, data) => {
-  if (error) console.log('error occured in room saving');
-});
