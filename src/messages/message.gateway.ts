@@ -8,10 +8,9 @@ import {
 } from '@nestjs/websockets';
 import { UseGuards } from '@nestjs/common';
 import { ISocketClient } from '../common/interface/socket-client';
-// import { TokenGuard } from 'src/auth/guard/jwt.guard';
 import { MessageService } from './message.service';
 import { ConnectionService } from 'src/connection/connection.service';
-import { IMessageFrontend } from './interface/message-frontend';
+import { IMessageResponse } from './interface/message-frontend';
 import { CurrentRoomGuard } from 'src/common/guard/current-room.guard';
 
 @WebSocketGateway()
@@ -28,10 +27,10 @@ export class MessageGateway {
   async getAllMessagesInRoom(@ConnectedSocket() client: ISocketClient) {
     const room = client.userData.room;
     const messages = await this.messageService.getAllMessages(
-      client.userData,
+      client.userData.user.username,
       room,
     );
-    return client.emit<IMessageFrontend>('getAllMessages', messages);
+    return client.emit<IMessageResponse>('getAllMessages', messages);
   }
 
   @SubscribeMessage('sendMessage')
@@ -42,7 +41,7 @@ export class MessageGateway {
     const { username } = client.userData.user;
     const currentRoom = client.userData.room;
 
-    const messageFronted: IMessageFrontend =
+    const messageFronted: IMessageResponse =
       await this.messageService.saveMessage(username, currentRoom._id, text);
     const activeConnected = this.connetionService.getActiveConnected();
     await this.messageService.sendMessageToRoom(

@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthModule } from './auth/auth.module';
-import { ChatInterfaceModule } from './chat-interface/chat-interface.module';
 import { MessageModule } from './messages/message.module';
 import { UserModule } from './user/user.module';
 import { ConnectionModule } from './connection/connection.module';
@@ -19,7 +18,6 @@ import config from './common/config';
       },
     ),
     AuthModule,
-    ChatInterfaceModule,
     MessageModule,
     UserModule,
     ConnectionModule,

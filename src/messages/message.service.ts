@@ -1,17 +1,13 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { ConnectedSocket, WsException } from '@nestjs/websockets';
+import { WsException } from '@nestjs/websockets';
 import { Model, Types } from 'mongoose';
-import * as mongoose from 'mongoose';
-import { User, UserDocument } from 'src/user/Schema/user.schema';
+import { User } from 'src/user/schema/user.schema';
 import { ISocketClient } from 'src/common/interface/socket-client';
-import { IMessageFrontend } from './interface/message-frontend';
-import { MessageDocument } from './schema/message.schema';
-import { isOnline, RoomDocument } from 'src/room/schema/room.schema';
-import { ConnectionService } from 'src/connection/connection.service';
-import { IUserData } from 'src/chat-interface/dto/user-data.dto';
+import { IMessageResponse } from './interface/message-frontend';
+import { Message, MessageDocument } from './schema/message.schema';
+import { RoomDocument } from 'src/room/schema/room.schema';
 import { UserService } from 'src/user/user.service';
-import { ObjectID } from 'mongodb';
 
 @Injectable()
 export class MessageService {
@@ -25,7 +21,7 @@ export class MessageService {
     username: string,
     roomId: string | Types._ObjectId,
     text: string,
-  ): Promise<IMessageFrontend> {
+  ): Promise<IMessageResponse> {
     const newMessage = new this.messageModel({
       username,
       text,
@@ -35,44 +31,44 @@ export class MessageService {
     await this.roomModel.findByIdAndUpdate(roomId, {
       $addToSet: { messages: newMessage._id },
     });
-    const IMessageFrontend: IMessageFrontend = {
+    const IMessageResponse: IMessageResponse = {
       text: newMessage.text,
       username: newMessage.username,
     };
-    return IMessageFrontend;
+    return IMessageResponse;
   }
 
-  async getAllMessages(
-    userData: IUserData,
-    room: RoomDocument,
-  ): Promise<IMessageFrontend[] | WsException> {
-    const populatedRoomsParticipants: RoomDocument = await room
+  async getAllMessages(username: string, room: RoomDocument) {
+    const populatedRoom: RoomDocument = await room
       .populate('participants')
       .execPopulate();
 
-    const isParticipant = populatedRoomsParticipants.participants.map(
-      (participant: User) => {
-        if (participant.username == userData.user.username) return true;
+    const isParticipant = populatedRoom.participants.map(
+      (participant: User | Types._ObjectId) => {
+        if (participant instanceof User)
+          if (participant.username === username) return true;
       },
     );
     if (!isParticipant.includes(true))
       throw new WsException("you're not into the room");
-    const populatedRoomsMessages: RoomDocument = await room
-      .populate('messages')
-      .execPopulate();
+    const messages = (await room.populate('messages').execPopulate()).messages;
 
-    const messages: IMessageFrontend[] = [];
-    populatedRoomsMessages.messages.forEach((message: MessageDocument) => {
-      messages.push({ username: message.username, text: message.text });
+    const messagesResponse: IMessageResponse[] = [];
+    messages.forEach((message: Message | Types._ObjectId) => {
+      if (message instanceof Message)
+        messagesResponse.push({
+          username: message.username,
+          text: message.text,
+        });
     });
-    return messages;
+    return messages as Message[];
   }
 
   async sendMessageToRoom(
     client: ISocketClient,
     server: ISocketClient,
     activeConnected,
-    message: IMessageFrontend,
+    message: IMessageResponse,
   ) {
     for (const participant of client.userData.room.isOnline) {
       console.log(
@@ -83,7 +79,7 @@ export class MessageService {
         !activeConnected[participant.user.toString()] ||
         !participant.status
       ) {
-        await this.userService.updateUser(participant.user, {
+        await this.userService.updateOne(participant.user._id, {
           $inc: { ['unread.' + client.userData.room._id]: 1 },
         });
       }

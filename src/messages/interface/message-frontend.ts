@@ -1,4 +1,4 @@
-export interface IMessageFrontend {
+export interface IMessageResponse {
   username: string;
   text: string;
 }

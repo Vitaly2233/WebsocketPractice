@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types, UpdateQuery } from 'mongoose';
+import { FilterQuery, Model, Types, UpdateQuery } from 'mongoose';
 import { RegisterRequestDto } from 'src/auth/dto/register-request.dto';
-import { UserDocument } from 'src/user/Schema/user.schema';
+import { UserDocument } from 'src/user/schema/user.schema';
 import { WsException } from '@nestjs/websockets';
-import { IUserRoomResponse } from './interface/user-rooms.interface';
+import { Room } from 'src/room/schema/room.schema';
 
 @Injectable()
 export class UserService {
@@ -29,11 +29,15 @@ export class UserService {
     return this.userModel.findById(id);
   }
 
-  async updateUser(
+  async updateOne(
     _id: string | Types._ObjectId,
     updateData: UpdateQuery<UserDocument>,
   ) {
     return this.userModel.updateOne({ _id }, updateData);
+  }
+
+  async updateByIds(ids: string[], updateData: UpdateQuery<UserDocument>) {
+    return this.userModel.updateMany({ _id: { $in: ids } }, updateData);
   }
 
   async removeUnreads(user: UserDocument, roomId: string | Types._ObjectId) {
@@ -53,24 +57,17 @@ export class UserService {
   }
 
   async getUserRooms(userId: Types._ObjectId | string) {
-    const userRooms = (
+    const rooms = (
       await this.userModel.findById(userId, [], {
         populate: 'rooms',
       })
     ).rooms;
 
-    const sendUserRooms: IUserRoomResponse[] = [];
-    for (const userRoom of userRooms) {
-      if (userRoom instanceof Types._ObjectId)
-        throw new WsException('user rooms not found');
+    rooms.forEach((room: Room | Types._ObjectId) => {
+      if (room instanceof Types._ObjectId)
+        throw new WsException(`user room ${room} not found`);
+    });
 
-      const { roomName, _id } = userRoom;
-      const sendUserRoom: IUserRoomResponse = {};
-      sendUserRoom[roomName] = {};
-      sendUserRoom[roomName].unread = await this.getUnreads(userId, _id);
-      sendUserRoom[roomName].id = _id;
-      sendUserRooms.push(sendUserRoom);
-    }
-    return sendUserRooms;
+    return rooms as Room[];
   }
 }

@@ -1,9 +1,7 @@
-import { HttpException } from '@nestjs/common';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { IsString, Length } from 'class-validator';
 import { Types, Document } from 'mongoose';
-import { IUserRoomResponse } from 'src/user/interface/user-rooms.interface';
-import { Room, RoomDocument } from 'src/room/schema/room.schema';
+import { Room } from 'src/room/schema/room.schema';
 
 type RoomId = string;
 type count = number;

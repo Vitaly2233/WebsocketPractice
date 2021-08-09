@@ -2,17 +2,18 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { WsException } from '@nestjs/websockets';
 import { Types, Model } from 'mongoose';
-import { User, UserDocument } from 'src/user/Schema/user.schema';
+import { User, UserDocument } from 'src/user/schema/user.schema';
 import { ISocketClient } from 'src/common/interface/socket-client';
-import { IUserRoomResponse } from 'src/user/interface/user-rooms.interface';
-import { RoomDocument } from 'src/room/schema/room.schema';
+import { Room, RoomDocument } from 'src/room/schema/room.schema';
 import { ConnectionService } from 'src/connection/connection.service';
 import { UserService } from 'src/user/user.service';
+import { MessageService } from 'src/messages/message.service';
 
 @Injectable()
 export class RoomService {
   constructor(
     private userService: UserService,
+    private messageService: MessageService,
     private connectionService: ConnectionService,
     @InjectModel('room') private roomModel: Model<RoomDocument>,
   ) {}
@@ -27,7 +28,7 @@ export class RoomService {
       participants: [],
     });
 
-    let users: UserDocument[] = [];
+    let userIds: string[] = [];
     for (const username of participantUsernames) {
       const user: UserDocument = await this.userService.findOneByUsername(
         username,
@@ -35,24 +36,20 @@ export class RoomService {
       if (!user) throw new WsException(`user ${username} is missing`);
       newRoom.participants.push(user._id);
       newRoom.isOnline.push({ user: user._id, status: false });
-      users.push(user);
+      userIds.push(user._id);
     }
 
     const activeConnected = this.connectionService.getActiveConnected();
     await newRoom.save();
 
-    for (const user of users) {
-      await this.userService.updateUser(user._id, {
-        $push: { rooms: newRoom._id },
-      });
-      const updatedUser = await this.userService.findById(user._id);
+    await this.userService.updateByIds(userIds, {
+      $push: { rooms: newRoom._id },
+    });
 
-      const allUserRooms: IUserRoomResponse[] =
-        await this.userService.getUserRooms(updatedUser._id);
+    for (const id of userIds) {
+      const allUserRooms: Room[] = await this.userService.getUserRooms(id);
 
-      server
-        .to(activeConnected[updatedUser._id])
-        .emit('getUserRooms', allUserRooms);
+      server.to(activeConnected[id]).emit('getUserRooms', allUserRooms);
     }
 
     return true;
@@ -62,9 +59,28 @@ export class RoomService {
     return await this.roomModel.findById(_id);
   }
 
-  async connectToTheRoom(user: UserDocument, room: RoomDocument) {
+  async connectToTheRoom(
+    user: UserDocument,
+    room: RoomDocument,
+    client: ISocketClient,
+  ) {
     await this.userService.removeUnreads(user, room._id);
     await this.changeUserStatus(user._id, room, true);
+
+    const messages = await this.messageService.getAllMessages(
+      user.username,
+      room,
+    );
+    const participants = await this.getParticipantUsernames(
+      client.userData.room,
+    );
+    client.emit('getParticipants', participants);
+
+    await client.join(room._id.toString(), () => {
+      console.log('client rooms after adding', client.rooms);
+    });
+
+    return client.emit('getAllMessages', messages);
   }
 
   async closeRoom(
@@ -89,7 +105,7 @@ export class RoomService {
     return usernames;
   }
 
-  private async changeUserStatus(
+  async changeUserStatus(
     userId: string | Types._ObjectId,
     room: RoomDocument,
     status: boolean,
