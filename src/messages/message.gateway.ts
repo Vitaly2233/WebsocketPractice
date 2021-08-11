@@ -4,13 +4,12 @@ import {
   WebSocketServer,
   ConnectedSocket,
   MessageBody,
-  WsException,
 } from '@nestjs/websockets';
 import { UseGuards } from '@nestjs/common';
 import { ISocketClient } from '../common/interface/socket-client';
 import { MessageService } from './message.service';
 import { ConnectionService } from 'src/connection/connection.service';
-import { IMessageResponse } from './interface/message-frontend';
+import { IMessageResponse } from './interface/message-response';
 import { CurrentRoomGuard } from 'src/common/guard/current-room.guard';
 
 @WebSocketGateway()
@@ -30,7 +29,7 @@ export class MessageGateway {
       client.userData.user.username,
       room,
     );
-    return client.emit<IMessageResponse>('getAllMessages', messages);
+    client.emit<IMessageResponse>('getAllMessages', messages);
   }
 
   @SubscribeMessage('sendMessage')

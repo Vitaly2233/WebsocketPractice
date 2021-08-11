@@ -1,4 +1,4 @@
-import { UseGuards } from '@nestjs/common';
+import { UseFilters, UseGuards } from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
@@ -10,8 +10,10 @@ import { ISocketClient } from 'src/common/interface/socket-client';
 import { CurrentRoomGuard } from 'src/common/guard/current-room.guard';
 import { RoomService } from './room.service';
 import { CreateRoomDto } from 'src/room/dto/create-room.dto';
+import { WsExceptionFilter } from 'src/common/filter/ws-exception.filter';
 
 @WebSocketGateway()
+@UseFilters(WsExceptionFilter)
 export class RoomGateway {
   constructor(private roomServie: RoomService) {}
 
@@ -19,7 +21,7 @@ export class RoomGateway {
   @SubscribeMessage('connectToTheRoom')
   async connectToTheRoom(@ConnectedSocket() client: ISocketClient) {
     const room = client.userData.room;
-    await this.roomServie.connect(client.userData.user, room, client);
+    return await this.roomServie.connect(client.userData.user, room, client);
   }
 
   @SubscribeMessage('closeRoom')

@@ -36,7 +36,6 @@ const auth = new Vue({
       }
       const token = await response.json();
       if (token.statusCode === 404) return this.status('user is not found');
-      console.log('setting token');
       document.cookie = 'token=' + token.access_token;
       await interface.setInterface();
     },
@@ -71,16 +70,15 @@ const interface = new Vue({
     connected: false,
   },
 
-  created() {
-    this.setInterface();
+  async created() {
+    socket = io('http://localhost:3000');
+    console.log('here');
+    socket.emit('events');
+    setSocket();
   },
   methods: {
     async setInterface() {
-      if (!socket?.connected) {
-        socket = await io('http://localhost:8080/');
-        setSocket();
-      }
-      socket.emit('getUserRooms');
+      socket.emit('getUserRooms', {});
       socket.emit('getUsername');
       document.getElementById('auth').hidden = true;
       document.getElementById('room').hidden = true;
@@ -173,9 +171,10 @@ const room = new Vue({
 //   },
 // })
 
-const setSocket = () => {
+function setSocket() {
   socket.on('connect', () => {
     console.log('connect');
+    interface.setInterface();
   });
 
   socket.on('disconnect', () => {
@@ -226,7 +225,7 @@ const setSocket = () => {
   });
 
   return true;
-};
+}
 
 function delete_cookie(name, path, domain) {
   if (get_cookie(name)) {

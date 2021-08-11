@@ -99,6 +99,10 @@ export class RoomService {
     });
   }
 
+  getActiveUsersInRoom(room: Room | Types._ObjectId) {
+    if (room instanceof Room) return this.roomModel.find({});
+  }
+
   async getParticipantUsernames(room: RoomDocument) {
     const populdatedRoom: RoomDocument = await room
       .populate('participants')

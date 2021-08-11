@@ -6,11 +6,6 @@ import { Message } from 'src/messages/schema/message.schema';
 
 export type RoomDocument = Room & Document;
 
-export interface isOnline {
-  user?: User | Types._ObjectId;
-  status?: boolean;
-}
-
 @Schema()
 export class Room {
   _id: Types._ObjectId | string;
@@ -19,7 +14,7 @@ export class Room {
     type: String,
     required: true,
   })
-  roomName: string;
+  name: string;
 
   @Prop({
     default: [],
@@ -30,11 +25,10 @@ export class Room {
   participants: User[] | Types._ObjectId[];
 
   @Prop({
-    default: [],
     required: true,
     ref: 'user',
   })
-  isOnline: isOnline[];
+  online: User[] | Types._ObjectId[];
 
   @Prop({
     type: [{ type: mongoose.Schema.Types.ObjectId }],

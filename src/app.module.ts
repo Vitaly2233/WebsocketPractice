@@ -6,6 +6,7 @@ import { UserModule } from './user/user.module';
 import { ConnectionModule } from './connection/connection.module';
 import { ConnectionGateway } from './connection/connection.gateway';
 import { RoomModule } from './room/room.module';
+import { ServerModule } from './server/server.module';
 import config from './common/config';
 
 @Module({
@@ -22,6 +23,7 @@ import config from './common/config';
     UserModule,
     ConnectionModule,
     RoomModule,
+    ServerModule,
   ],
   providers: [ConnectionGateway],
 })

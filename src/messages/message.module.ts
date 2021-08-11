@@ -7,6 +7,7 @@ import { AuthModule } from 'src/auth/auth.module';
 import { UserModule } from 'src/user/user.module';
 import { ConnectionModule } from 'src/connection/connection.module';
 import { RoomModule } from 'src/room/room.module';
+import { ServerModule } from 'src/server/server.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { RoomModule } from 'src/room/room.module';
     AuthModule,
     UserModule,
     ConnectionModule,
+    ServerModule,
   ],
   providers: [MessageGateway, MessageService],
   exports: [MessageService],
