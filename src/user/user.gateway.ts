@@ -1,25 +1,25 @@
-import { UseGuards } from '@nestjs/common';
+import { UseFilters, UseGuards } from '@nestjs/common';
 import {
   ConnectedSocket,
   SubscribeMessage,
   WebSocketGateway,
-  WsException,
 } from '@nestjs/websockets';
 import { ISocketClient } from 'src/common/interface/socket-client';
-import { JwtAuthGuard } from 'src/common/guard/jwt.guard';
+import { JwtGuard } from 'src/common/guard/jwt.guard';
 import { UserService } from './user.service';
+import { WsExceptionFilter } from 'src/common/filter/ws-exception.filter';
 
 @WebSocketGateway()
-// @UseGuards(JwtAuthGuard)
+@UseFilters(WsExceptionFilter)
+@UseGuards(JwtGuard)
 export class RoomGateway {
   constructor(private userService: UserService) {}
 
   @SubscribeMessage('getUserRooms')
   async getUserRooms(@ConnectedSocket() client: ISocketClient) {
-    console.log('here');
-
-    // throw new WsException('something is wrong');
-    // return await this.userService.getUserRooms(client.userData.user._id);
+    console.log('getting user rooms');
+    
+    await client.emit('getUserRooms', await this.userService.getUserRooms(client.userData.user._id));
   }
 
   @SubscribeMessage('getUsername')

@@ -20,13 +20,4 @@ export default {
     { name: 'Manager', description: 'Manager role of the platform' },
     { name: 'Customer', description: 'Customer role of the platform' },
   ],
-  EMAIL: {
-    SENDER_ADDRESS: 'registration-no-reply@tros.vrealsoft.com',
-    ADMIN_ADDRESS: 'security-warning-no-reply@tros.vrealsoft.com',
-    PASSWORD_SUBJECT: 'Recover password on TROS',
-    RECOVER_PASSWORD_SUBJECT: 'Password recovery - warning',
-    REGISTRATION_SUBJECT: 'Registration on TROS',
-    REGISTRATION_MANAGER_SUBJECT: 'Manager registration on TROS',
-    RESEND_PASSWORD_SUBJECT: 'Your password on TROS has been updated',
-  },
 };

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model, Types, UpdateQuery } from 'mongoose';
+import { Model, Types, UpdateQuery } from 'mongoose';
 import { RegisterRequestDto } from 'src/auth/dto/register-request.dto';
 import { UserDocument } from 'src/user/schema/user.schema';
 import { WsException } from '@nestjs/websockets';
@@ -36,7 +36,7 @@ export class UserService {
     return this.userModel.updateOne({ _id }, updateData);
   }
 
-  async updateByIds(ids: string[], updateData: UpdateQuery<UserDocument>) {
+  async updateByIds(ids:Types._ObjectId[], updateData: UpdateQuery<UserDocument>) {
     return this.userModel.updateMany({ _id: { $in: ids } }, updateData);
   }
 

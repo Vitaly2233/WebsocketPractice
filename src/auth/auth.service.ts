@@ -1,4 +1,5 @@
 import {
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -18,13 +19,17 @@ export class AuthService {
 
   async register(username: string, password: string) {
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await this.userService.create({
-      username,
-      password: hashedPassword,
-    });
-    const userJson = user.toJSON();
-    delete userJson.password;
-    return userJson;
+    try {
+      const user = await this.userService.create({
+        username,
+        password: hashedPassword,
+      });
+      const userJson = user.toJSON();
+      delete userJson.password;
+      return userJson;
+    } catch (e) {
+      throw new ConflictException('username with the name is already exist');
+    }
   }
 
   async login(username: string, password: string) {

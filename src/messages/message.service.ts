@@ -1,12 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Type } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { WsException } from '@nestjs/websockets';
 import { Model, Types } from 'mongoose';
 import { User } from 'src/user/schema/user.schema';
-import { ISocketClient } from 'src/common/interface/socket-client';
 import { IMessageResponse } from './interface/message-response';
 import { Message, MessageDocument } from './schema/message.schema';
-import { Room, RoomDocument } from 'src/room/schema/room.schema';
+import { RoomDocument } from 'src/room/schema/room.schema';
 import { UserService } from 'src/user/user.service';
 import { RoomService } from 'src/room/room.service';
 import { ConnectionService } from 'src/connection/connection.service';
@@ -47,14 +46,11 @@ export class MessageService {
       .populate('participants')
       .execPopulate();
 
-    const isParticipant = populatedRoom.participants.map(
-      (participant: User | Types._ObjectId) => {
-        if (participant instanceof User)
-          if (participant.username === username) return true;
-      },
-    );
-    if (!isParticipant.includes(true))
+    const isParticipant = this.roomService.isParticipant(username, populatedRoom.participants as User[])
+
+    if (!isParticipant)
       throw new WsException("you're not into the room");
+      
     const messages = (await room.populate('messages').execPopulate()).messages;
 
     const messagesResponse: IMessageResponse[] = [];
@@ -68,20 +64,19 @@ export class MessageService {
     return messages as Message[];
   }
 
-  async sendToRoom(senderUsername: string, room: Room, messageText: string) {
-    const message = await this.create(senderUsername, room._id, messageText);
+  async sendToRoom(
+    senderUsername: string,
+    roomName: string,
+    roomId: Types._ObjectId,
+    roomParticipants: Types._ObjectId[],
+    messageText: string,
+  ) {
+    const message = await this.create(senderUsername, roomId, messageText);
 
-    if (room.participants instanceof Array)
-      room.participants.filter((participant) => {});
+    await this.userService.updateByIds(roomParticipants, {
+      $inc: { ['unread.' + roomId]: 1 },
+    });
 
-    for (const participant of room.participants) {
-      const userId = participant.user._id.toString();
-      // if (!participant.status) {
-      //   await this.userService.updateOne(userId, {
-      //     $inc: { ['unread.' + room._id]: 1 },
-      //   });
-      // }
-      this.serverService.sendMessageToRoom(room.name, message);
-    }
+    this.serverService.sendMessageToRoom(roomName, message);
   }
 }

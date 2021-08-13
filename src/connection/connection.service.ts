@@ -25,8 +25,6 @@ export class ConnectionService {
   }
 
   async handleConnection(client: ISocketClient, cookie: string) {
-    if (!cookie) return client.disconnect();
-
     const token: string | undefined = getCookieValueByName(cookie, 'token');
 
     const verifiedData: ITokenData = await this.jwtService.verify(token);
@@ -39,7 +37,6 @@ export class ConnectionService {
     if (!user) return client.disconnect();
 
     this.activeConnected[user._id] = client.id.toString();
-    console.log('active connected are: ', this.activeConnected);
   }
 
   async deleteActiveConnected(client: ISocketClient) {

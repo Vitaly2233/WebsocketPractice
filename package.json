@@ -28,14 +28,19 @@
     "@nestjs/passport": "^8.0.1",
     "@nestjs/platform-express": "^8.0.6",
     "@nestjs/platform-socket.io": "^8.0.6",
+    "@nestjs/platform-ws": "^8.0.6",
+    "@nestjs/serve-static": "^2.2.2",
     "@nestjs/websockets": "^8.0.6",
     "bcrypt": "^5.0.1",
+    "class-transformer": "^0.4.0",
     "class-validator": "^0.13.1",
     "dotenv-flow": "^3.2.0",
     "mongoose": "^5.13.6",
     "passport": "^0.4.1",
     "passport-jwt": "^4.0.0",
-    "reflect-metadata": "^0.1.13"
+    "redis": "^3.1.2",
+    "reflect-metadata": "^0.1.13",
+    "socket.io-redis": "^6.1.1"
   },
   "devDependencies": {
     "@nestjs/cli": "^7.6.0",

@@ -30,14 +30,14 @@ export class RoomService {
       participants: [],
     });
 
-    let userIds: string[] = [];
+    let userIds: Types._ObjectId[] = [];
     for (const username of participantUsernames) {
       const user: UserDocument = await this.userService.findOneByUsername(
         username,
       );
       if (!user) throw new WsException(`user ${username} is missing`);
       newRoom.participants.push(user._id);
-      newRoom.isOnline.push({ user: user._id, status: false });
+      newRoom.online.push(user._id);
       userIds.push(user._id);
     }
 
@@ -51,7 +51,7 @@ export class RoomService {
     for (const id of userIds) {
       const allUserRooms: Room[] = await this.userService.getUserRooms(id);
 
-      server.to(activeConnected[id]).emit('getUserRooms', allUserRooms);
+      server.to(activeConnected[id.toString()]).emit('getUserRooms', allUserRooms);
     }
 
     return true;
@@ -72,7 +72,7 @@ export class RoomService {
     await this.userService.removeUnreads(user, room._id);
     await this.changeUserStatus(user._id, room, true);
 
-    const messages = await this.messageService.getAllMessages(
+    const messages = await this.messageService.getAllInRoom(
       user.username,
       room,
     );
@@ -114,23 +114,24 @@ export class RoomService {
     return usernames;
   }
 
+  isParticipant(username: string, participants: User[]){
+    participants.map((participant) => {
+      if (participant.username === username) return true;
+    })
+    return false; 
+  }
+
   private async changeUserStatus(
     userId: string | Types._ObjectId,
     room: RoomDocument,
     status: boolean,
   ) {
-    if (!room) return false;
-    let index = 0;
-    for (const participant of room.isOnline) {
-      if (participant.user.toString() == userId.toString()) {
-        room.isOnline[index].status = status;
-        room.markModified('isOnline');
-
-        await room.save();
-        return true;
-      }
-      index++;
-    }
-    return false;
+    if (status)
+      return await this.roomModel.updateOne(room._id, {
+        $pull: { online: { userId } },
+      });
+    return await this.roomModel.updateOne(room._id, {
+      $push: { online: { userId } },
+    });
   }
 }

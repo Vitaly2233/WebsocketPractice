@@ -8,6 +8,8 @@ import { ConnectionGateway } from './connection/connection.gateway';
 import { RoomModule } from './room/room.module';
 import { ServerModule } from './server/server.module';
 import config from './common/config';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -18,6 +20,9 @@ import config from './common/config';
         useNewUrlParser: true,
       },
     ),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'static'),
+    }),
     AuthModule,
     MessageModule,
     UserModule,

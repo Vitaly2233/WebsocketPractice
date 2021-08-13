@@ -20,7 +20,7 @@ const auth = new Vue({
         username: this.username,
         password: this.password,
       };
-      const response = await fetch('http://localhost:8080/auth/login', {
+      const response = await fetch('http://localhost:8080/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -45,7 +45,7 @@ const auth = new Vue({
         username: this.username,
         password: this.password,
       };
-      const result = await fetch('http://localhost:8080/auth/registration', {
+      const result = await fetch('http://localhost:8080/auth/api/registration', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -71,14 +71,15 @@ const interface = new Vue({
   },
 
   async created() {
-    socket = io('http://localhost:3000');
-    console.log('here');
-    socket.emit('events');
-    setSocket();
+    socket = io('http://localhost:8080');
+    if (socket) auth.setAuth();
   },
   methods: {
     async setInterface() {
-      socket.emit('getUserRooms', {});
+      if(!socket)
+        socket = await io('http://localhost:8080');
+      console.log('socket is send');
+      socket.emit('getUserRooms');
       socket.emit('getUsername');
       document.getElementById('auth').hidden = true;
       document.getElementById('room').hidden = true;
@@ -183,6 +184,7 @@ function setSocket() {
   });
 
   socket.on('getUserRooms', async (data) => {
+    console.log(data);
     await interface.getChats(data);
   });
 
